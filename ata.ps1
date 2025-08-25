@@ -141,7 +141,7 @@ foreach ($f in $files) {
 
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $processInfo
-        $process.Start()
+        $null = $process.Start()
 
         $timeout = 30000  # 30秒超时
         if ($DebugMode) {
