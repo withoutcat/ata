@@ -105,13 +105,18 @@ if ($totalFiles -gt 200 -and -not $Force) {
 
 # --------------------------
 # 是否删除原图片
-# 当前目录执行且未使用 -d 参数
+# 如果没有指定 -d 参数，就提示用户
 # --------------------------
 $deleteOriginal = $Delete
-if (-not $Delete -and $TargetDir -eq (Get-Location)) {
+if (-not $Delete) {
     $choice = Read-Host "是否删除原图片？(D 删除 / S 保留)"
-    if ($choice.ToUpper() -eq "D") { $deleteOriginal = $true }
+    if ($choice.ToUpper() -eq "D") { 
+        $deleteOriginal = $true 
+    } else {
+        $deleteOriginal = $false
+    }
 }
+
 
 # --------------------------
 # 转换计数器
