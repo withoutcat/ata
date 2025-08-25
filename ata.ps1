@@ -129,25 +129,30 @@ foreach ($f in $files) {
 
         # --------------------------
         # 调用 ffmpeg
-        # -debug 时显示日志
-        # 默认屏蔽输出
         # --------------------------
         $processInfo = New-Object System.Diagnostics.ProcessStartInfo
         $processInfo.FileName = "ffmpeg"
         $processInfo.Arguments = $ffmpegArgs
         $processInfo.UseShellExecute = $false
         $processInfo.CreateNoWindow = $true
+        $processInfo.RedirectStandardOutput = $true
+        $processInfo.RedirectStandardError  = $true
+
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $processInfo
+        $process.Start()
+
         if ($DebugMode) {
-            $processInfo.RedirectStandardOutput = $false
-            $processInfo.RedirectStandardError = $false
+            # 把 ffmpeg 日志转发到当前控制台
+            $process.StandardOutput.BaseStream.CopyTo([Console]::OpenStandardOutput())
+            $process.StandardError.BaseStream.CopyTo([Console]::OpenStandardError())
         } else {
-            $processInfo.RedirectStandardOutput = $true
-            $processInfo.RedirectStandardError = $true
+            # 吃掉输出，避免缓冲区阻塞
+            $null = $process.StandardOutput.ReadToEnd()
+            $null = $process.StandardError.ReadToEnd()
         }
 
-        $process = [System.Diagnostics.Process]::Start($processInfo)
         $process.WaitForExit()
-
         $stopwatch.Stop()
 
         # --------------------------
