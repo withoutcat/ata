@@ -53,12 +53,6 @@ Write-Host "准备转换目录：" $TargetDir -ForegroundColor Cyan
 $DebugMode = $Debug -or ($PSBoundParameters.Keys | Where-Object { $_.ToLower() -eq "debug" })
 
 # --------------------------
-# 检测当前目录的可转换图片
-# --------------------------
-$filesInDir = Get-ChildItem -Path $TargetDir -Include *.jpg, *.jpeg, *.png -File
-$fileCount = $filesInDir.Count
-
-# --------------------------
 # 检测子文件夹是否有图片
 # --------------------------
 $subDirs = Get-ChildItem -Path $TargetDir -Directory
@@ -86,24 +80,6 @@ if ($hasSubImages -and ($subDirs.Count -gt 0)) {
 }
 
 # --------------------------
-# 获取最终要处理的文件列表
-# --------------------------
-if ($doRecursive) {
-    $files = Get-ChildItem -Path $TargetDir -Recurse -File | Where-Object { $_.Extension -match "^\.(jpg|jpeg|png)$" }
-} else {
-    $files = Get-ChildItem -Path $TargetDir -File | Where-Object { $_.Extension -match "^\.(jpg|jpeg|png)$" }
-}
-
-# --------------------------
-# 图片数量提示
-# --------------------------
-$totalFiles = $files.Count
-if ($totalFiles -gt 200 -and -not $Force) {
-    $choice = Read-Host "发现 $totalFiles 张可转换图片，是否继续？(Y/N)"
-    if ($choice.ToUpper() -ne "Y") { exit 0 }
-}
-
-# --------------------------
 # 是否删除原图片
 # 如果没有指定 -d 参数，就提示用户
 # --------------------------
@@ -117,6 +93,23 @@ if (-not $Delete) {
     }
 }
 
+# --------------------------
+# 获取最终要处理的文件列表
+# --------------------------
+if ($doRecursive) {
+    $files = Get-ChildItem -Path $TargetDir -Recurse -Include *.jpg, *.jpeg, *.png -File
+} else {
+    $files = Get-ChildItem -Path $TargetDir\* -Include *.jpg, *.jpeg, *.png -File
+}
+
+# --------------------------
+# 图片数量提示
+# --------------------------
+$totalFiles = $files.Count
+if ($totalFiles -gt 200 -and -not $Force) {
+    $choice = Read-Host "发现 $totalFiles 张可转换图片，是否继续？(Y/N)"
+    if ($choice.ToUpper() -ne "Y") { exit 0 }
+}
 
 # --------------------------
 # 转换计数器
