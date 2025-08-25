@@ -107,10 +107,13 @@ foreach ($f in Get-ChildItem @gciParams) {
         $ffmpegArgs = "-i `"$($f.FullName)`" -c:v libaom-av1 -still-picture 1 -crf 28 -pix_fmt yuv420p `"$out`""
 
         if ($DebugMode) {
-            Start-Process ffmpeg -ArgumentList $ffmpegArgs -Wait -NoNewWindow -PassThru | Out-Null
+            # 调试模式：显示 ffmpeg 日志
+            & ffmpeg $ffmpegArgs
         } else {
-            Start-Process ffmpeg -ArgumentList $ffmpegArgs -Wait -NoNewWindow -PassThru *> $null
+            # 普通模式：屏蔽 ffmpeg 输出
+            & ffmpeg $ffmpegArgs *> $null 2>&1
         }
+
 
         $stopwatch.Stop()
 
