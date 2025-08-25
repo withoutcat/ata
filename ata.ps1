@@ -1,5 +1,6 @@
 ﻿param(
-    [string]$TargetDir
+    [string]$TargetDir,
+    [switch]$Debug
 )
 
 Add-Type -AssemblyName Microsoft.VisualBasic
@@ -12,6 +13,7 @@ function Show-Help {
     Write-Host "  ata ./                  在当前目录递归转换所有 jpg/jpeg/png" -ForegroundColor Yellow
     Write-Host "  ata `"D:\MyPictures\2025-08-25`"  指定目录递归转换图片" -ForegroundColor Yellow
     Write-Host "  ata /help               显示此帮助文档" -ForegroundColor Yellow
+    Write-Host "  ata ./ -debug           显示包含 ffmpeg 的详细日志（不区分大小写）" -ForegroundColor Yellow
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
 }
 
@@ -35,18 +37,30 @@ if (-not (Test-Path $TargetDir)) {
 $TargetDir = $TargetDir.TrimEnd('\','/')
 Write-Host "开始递归转换目录：" $TargetDir -ForegroundColor Cyan
 
+# 处理大小写不敏感 Debug 参数
+$DebugMode = $Debug -or ($PSBoundParameters.Keys | Where-Object { $_.ToLower() -eq "debug" })
+
 $successCount = 0
 $failCount = 0
 
 foreach ($f in Get-ChildItem -Recurse -Path $TargetDir -Include *.jpg, *.jpeg, *.png -File) {
     $out = Join-Path $f.DirectoryName ($f.BaseName + ".avif")
-    
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
     try {
-        $process = Start-Process ffmpeg -ArgumentList "-i `"$($f.FullName)`" -c:v libaom-av1 -still-picture 1 -crf 28 -pix_fmt yuv420p `"$out`"" -Wait -NoNewWindow -PassThru
+        $ffmpegArgs = "-i `"$($f.FullName)`" -c:v libaom-av1 -still-picture 1 -crf 28 -pix_fmt yuv420p `"$out`""
+
+        if ($DebugMode) {
+            # 调试模式：显示 ffmpeg 日志
+            Start-Process ffmpeg -ArgumentList $ffmpegArgs -Wait -NoNewWindow -PassThru | Out-Null
+        } else {
+            # 普通模式：屏蔽 ffmpeg 输出
+            Start-Process ffmpeg -ArgumentList $ffmpegArgs -Wait -NoNewWindow -PassThru *> $null
+        }
+
         $stopwatch.Stop()
 
-        if ($process.ExitCode -eq 0 -and (Test-Path $out)) {
+        if (Test-Path $out) {
             [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($f.FullName, 'OnlyErrorDialogs', 'SendToRecycleBin')
             $successCount++
             Write-Host "$($f.Name) 转换成功，耗时 $($stopwatch.ElapsedMilliseconds) ms" -ForegroundColor Green
