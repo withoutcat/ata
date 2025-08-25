@@ -16,6 +16,14 @@ if ($TargetDir -and ($TargetDir -eq 'ani')) {
     exit 0
 }
 
+# 子命令：ppt 演示文稿动图合成（0.4秒帧间隔）
+if ($TargetDir -and ($TargetDir -eq 'ppt')) {
+    $nextArg = $args | Select-Object -First 1
+    if (-not $nextArg) { Write-Host "用法：ata ppt <目录>" -ForegroundColor Yellow; exit 1 }
+    Create-AvifAnimation -InputDir $nextArg -Fps 2.5 -ShowDebug:$ShowDebug
+    exit 0
+}
+
 # 默认显示帮助
 if (-not $TargetDir -or $TargetDir -in @("/help", "-h", "--help")) {
     Show-Help

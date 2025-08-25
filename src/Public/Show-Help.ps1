@@ -5,6 +5,7 @@
     Write-Host "  ata ./                  在当前目录转换所有支持的图片格式" -ForegroundColor Yellow
     Write-Host "  ata `"D:\MyPictures\2025-08-25`"  指定目录转换图片" -ForegroundColor Yellow
     Write-Host "  ata ani ./              将目录内 AVIF 按文件名顺序合成为动图 AVIF" -ForegroundColor Yellow
+    Write-Host "  ata ppt ./              将目录内 AVIF 合成为演示文稿动图（0.4秒帧间隔）" -ForegroundColor Yellow
     Write-Host "  ata /help               显示此帮助文档" -ForegroundColor Yellow
     Write-Host "  ata ./ -debug           显示 ffmpeg 日志（或使用 -dbg）" -ForegroundColor Yellow
     Write-Host "  ata ./ -d -f -r         静默删除原图片、忽略数量、直接递归（-d 等同于 -Delete/-del）" -ForegroundColor Yellow
