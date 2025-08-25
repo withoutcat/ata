@@ -8,6 +8,14 @@
 
 Import-Module -Force -Name "$PSScriptRoot\module\ata.psm1"
 
+# 子命令：ani 动图合成
+if ($TargetDir -and ($TargetDir -eq 'ani')) {
+    $nextArg = $args | Select-Object -First 1
+    if (-not $nextArg) { Write-Host "用法：ata ani <目录>" -ForegroundColor Yellow; exit 1 }
+    Create-AvifAnimation -InputDir $nextArg -Debug:$Debug
+    exit 0
+}
+
 # 默认显示帮助
 if (-not $TargetDir -or $TargetDir -in @("/help", "-h", "--help")) {
     Show-Help
