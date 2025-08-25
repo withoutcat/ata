@@ -8,16 +8,24 @@
 
 Add-Type -AssemblyName Microsoft.VisualBasic
 
+# 统一管理：支持的图片扩展名（全部小写），可按需增减，只要 ffmpeg 支持即可
+$SupportedImageExtensions = @(
+    ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".heic", ".heif"
+)
+# 供 -Include 使用的通配符模式
+$IncludePatterns = $SupportedImageExtensions | ForEach-Object { "*$_" }
+
 # 帮助文档函数
 function Show-Help {
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
     Write-Host "ata - 图片批量转换为 AVIF (PowerShell 版本)" -ForegroundColor Cyan
     Write-Host "用法：" -ForegroundColor Cyan
-    Write-Host "  ata ./                  在当前目录转换所有 jpg/jpeg/png" -ForegroundColor Yellow
+    Write-Host "  ata ./                  在当前目录转换所有支持的图片格式" -ForegroundColor Yellow
     Write-Host "  ata `"D:\MyPictures\2025-08-25`"  指定目录转换图片" -ForegroundColor Yellow
     Write-Host "  ata /help               显示此帮助文档" -ForegroundColor Yellow
     Write-Host "  ata ./ -debug           显示 ffmpeg 日志" -ForegroundColor Yellow
     Write-Host "  ata ./ -d -f -r         静默删除原图片、忽略数量、直接递归" -ForegroundColor Yellow
+    Write-Host ("  支持的格式：{0}" -f ($SupportedImageExtensions -join ", ")) -ForegroundColor DarkGray
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
 }
 
@@ -67,7 +75,7 @@ $DebugMode = $Debug -or ($PSBoundParameters.Keys | Where-Object { $_.ToLower() -
 $subDirs = Get-ChildItem -Path $TargetDir -Directory
 $hasSubImages = $false
 foreach ($d in $subDirs) {
-    if ((Get-ChildItem -Path $d.FullName -Include *.jpg, *.jpeg, *.png -File -Recurse | Measure-Object).Count -gt 0) {
+    if ((Get-ChildItem -Path $d.FullName -Include $IncludePatterns -File -Recurse | Measure-Object).Count -gt 0) {
         $hasSubImages = $true
         break
     }
@@ -99,11 +107,11 @@ $null = $deleteOriginal
 # 获取最终要处理的文件列表
 if ($doRecursive) {
     $files = Get-ChildItem -Path $TargetDir -Recurse -File -Depth 3 | Where-Object {
-        $_.Extension -in ".jpg", ".jpeg", ".png"
+        $SupportedImageExtensions -contains $_.Extension.ToLower()
     }
 } else {
     $files = Get-ChildItem -Path $TargetDir -File | Where-Object {
-        $_.Extension -in ".jpg", ".jpeg", ".png"
+        $SupportedImageExtensions -contains $_.Extension.ToLower()
     }
 }
 
