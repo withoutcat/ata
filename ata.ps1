@@ -1,7 +1,7 @@
 ﻿param(
     [string]$TargetDir,
-    [switch]$Debug,      # -debug 显示 ffmpeg 日志
-    [switch]$Delete,     # -d 删除原图片
+    [Alias('dbg')][switch]$Debug,      # -debug 显示 ffmpeg 日志（别名：-dbg）
+    [Alias('del','d')][switch]$Delete,     # -d 删除原图片（别名：-del, -d）
     [switch]$Force,      # -f 忽略数量和文件夹检查
     [switch]$Recursive   # -r 直接递归
 )
@@ -23,8 +23,8 @@ function Show-Help {
     Write-Host "  ata ./                  在当前目录转换所有支持的图片格式" -ForegroundColor Yellow
     Write-Host "  ata `"D:\MyPictures\2025-08-25`"  指定目录转换图片" -ForegroundColor Yellow
     Write-Host "  ata /help               显示此帮助文档" -ForegroundColor Yellow
-    Write-Host "  ata ./ -debug           显示 ffmpeg 日志" -ForegroundColor Yellow
-    Write-Host "  ata ./ -d -f -r         静默删除原图片、忽略数量、直接递归" -ForegroundColor Yellow
+    Write-Host "  ata ./ -debug           显示 ffmpeg 日志（或使用 -dbg）" -ForegroundColor Yellow
+    Write-Host "  ata ./ -d -f -r         静默删除原图片、忽略数量、直接递归（-d 等同于 -Delete/-del）" -ForegroundColor Yellow
     Write-Host ("  支持的格式：{0}" -f ($SupportedImageExtensions -join ", ")) -ForegroundColor DarkGray
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
 }
