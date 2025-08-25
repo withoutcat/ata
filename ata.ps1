@@ -20,7 +20,7 @@ if ($TargetDir -and ($TargetDir -eq 'ani')) {
 if ($TargetDir -and ($TargetDir -eq 'ppt')) {
     $nextArg = $args | Select-Object -First 1
     if (-not $nextArg) { Write-Host "用法：ata ppt <目录>" -ForegroundColor Yellow; exit 1 }
-    Create-AvifAnimation -InputDir $nextArg -Fps 2.5 -ShowDebug:$ShowDebug
+    Create-AvifAnimation -InputDir $nextArg -Fps 1 -ShowDebug:$ShowDebug
     exit 0
 }
 
