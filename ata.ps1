@@ -1,8 +1,9 @@
 ﻿param(
     [string]$TargetDir,
     [switch]$Debug,
-    [switch]$d,  # 删除原图片
-    [switch]$f   # 忽略文件夹/文件数量检查
+    [switch]$Delete,   # -d 删除原图片
+    [switch]$Force,    # -f 忽略数量和文件夹检查
+    [switch]$Recursive # -r 直接递归
 )
 
 Add-Type -AssemblyName Microsoft.VisualBasic
@@ -12,12 +13,11 @@ function Show-Help {
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
     Write-Host "ata - 图片批量转换为 AVIF (PowerShell 版本)" -ForegroundColor Cyan
     Write-Host "用法：" -ForegroundColor Cyan
-    Write-Host "  ata ./                  在当前目录递归转换所有 jpg/jpeg/png" -ForegroundColor Yellow
-    Write-Host "  ata `"D:\MyPictures\2025-08-25`"  指定目录递归转换图片" -ForegroundColor Yellow
+    Write-Host "  ata ./                  在当前目录转换所有 jpg/jpeg/png" -ForegroundColor Yellow
+    Write-Host "  ata `"D:\MyPictures\2025-08-25`"  指定目录转换图片" -ForegroundColor Yellow
     Write-Host "  ata /help               显示此帮助文档" -ForegroundColor Yellow
-    Write-Host "  ata ./ -debug           显示包含 ffmpeg 的详细日志（不区分大小写）" -ForegroundColor Yellow
-    Write-Host "  ata ./ -d               转换完成后删除原图片（静默执行）" -ForegroundColor Yellow
-    Write-Host "  ata ./ -f               忽略文件夹/文件数量检查（静默执行）" -ForegroundColor Yellow
+    Write-Host "  ata ./ -debug           显示 ffmpeg 日志" -ForegroundColor Yellow
+    Write-Host "  ata ./ -d -f -r         静默删除原图片、忽略数量、直接递归" -ForegroundColor Yellow
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
 }
 
@@ -39,40 +39,67 @@ if (-not (Test-Path $TargetDir)) {
 }
 
 $TargetDir = $TargetDir.TrimEnd('\','/')
-Write-Host "开始递归转换目录：" $TargetDir -ForegroundColor Cyan
+Write-Host "准备转换目录：" $TargetDir -ForegroundColor Cyan
 
 # 处理大小写不敏感 Debug 参数
 $DebugMode = $Debug -or ($PSBoundParameters.Keys | Where-Object { $_.ToLower() -eq "debug" })
 
-# 统计目录和文件数量
-$subFolderCount = (Get-ChildItem -Path $TargetDir -Directory).Count
-$imageFiles = Get-ChildItem -Recurse -Path $TargetDir -Include *.jpg, *.jpeg, *.png -File
-$imageCount = $imageFiles.Count
+# 检测目录下可转换图片数量
+$filesInDir = Get-ChildItem -Path $TargetDir -Include *.jpg, *.jpeg, *.png -File
+$fileCount = $filesInDir.Count
 
-# 提示子文件夹过多
-if (-not $f -and $subFolderCount -gt 10) {
-    $resp = Read-Host "警告：当前目录包含 $subFolderCount 个子文件夹，递归操作可能影响大量文件。是否继续？(Y/N)"
-    if ($resp -notin @("Y","y")) { exit 0 }
+# 检测子文件夹及其可转换图片
+$subDirs = Get-ChildItem -Path $TargetDir -Directory
+$hasSubImages = $false
+foreach ($d in $subDirs) {
+    if ((Get-ChildItem -Path $d.FullName -Include *.jpg, *.jpeg, *.png -File -Recurse | Measure-Object).Count -gt 0) {
+        $hasSubImages = $true
+        break
+    }
 }
 
-# 提示图片过多
-if (-not $f -and $imageCount -gt 200) {
-    $resp = Read-Host "检测到 $imageCount 张可转换图片，处理可能需要较长时间。是否继续？(Y/N)"
-    if ($resp -notin @("Y","y")) { exit 0 }
+$doRecursive = $false
+# 递归可选逻辑
+if ($subDirs.Count -gt 0 -and $hasSubImages) {
+    if ($Recursive -or $Force) {
+        $doRecursive = $true
+    } else {
+        $choice = Read-Host "检测到子文件夹内有可转换图片，是否递归执行？(Y/N)"
+        if ($choice.ToUpper() -eq "Y") { $doRecursive = $true }
+    }
 }
 
-# 是否删除原图片询问（只在当前目录并且未使用 -d 参数时）
-$DeleteOriginal = $d.IsPresent
-if (-not $DeleteOriginal -and $TargetDir -eq (Get-Location)) {
-    $resp = Read-Host "是否删除原图片？ 输入 D 删除并移动到回收站，输入 S 保留原图片"
-    if ($resp -in @("D","d")) { $DeleteOriginal = $true }
-    else { $DeleteOriginal = $false }
+# 总计文件数（递归或非递归）
+$totalFiles = if ($doRecursive) {
+    (Get-ChildItem -Path $TargetDir -Include *.jpg, *.jpeg, *.png -File -Recurse).Count
+} else { $fileCount }
+
+# 图片数量提示
+if ($totalFiles -gt 200 -and -not $Force) {
+    $choice = Read-Host "发现 $totalFiles 张可转换图片，是否继续？(Y/N)"
+    if ($choice.ToUpper() -ne "Y") { exit 0 }
 }
 
+# 确认是否删除原图片（当前目录执行）
+$deleteOriginal = $Delete
+if (-not $Delete -and $TargetDir -eq (Get-Location)) {
+    $choice = Read-Host "是否删除原图片？(D 删除 / S 保留)"
+    if ($choice.ToUpper() -eq "D") { $deleteOriginal = $true }
+}
+
+# 确定递归模式参数
+$gciParams = @{
+    Path = $TargetDir
+    Include = '*.jpg','*.jpeg','*.png'
+    File = $true
+    Recurse = $doRecursive
+}
+
+# 转换计数器
 $successCount = 0
 $failCount = 0
 
-foreach ($f in $imageFiles) {
+foreach ($f in Get-ChildItem @gciParams) {
     $out = Join-Path $f.DirectoryName ($f.BaseName + ".avif")
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -80,17 +107,15 @@ foreach ($f in $imageFiles) {
         $ffmpegArgs = "-i `"$($f.FullName)`" -c:v libaom-av1 -still-picture 1 -crf 28 -pix_fmt yuv420p `"$out`""
 
         if ($DebugMode) {
-            # 调试模式：显示 ffmpeg 日志
             Start-Process ffmpeg -ArgumentList $ffmpegArgs -Wait -NoNewWindow -PassThru | Out-Null
         } else {
-            # 普通模式：屏蔽 ffmpeg 输出
             Start-Process ffmpeg -ArgumentList $ffmpegArgs -Wait -NoNewWindow -PassThru *> $null
         }
 
         $stopwatch.Stop()
 
         if (Test-Path $out) {
-            if ($DeleteOriginal) {
+            if ($deleteOriginal) {
                 [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($f.FullName, 'OnlyErrorDialogs', 'SendToRecycleBin')
             }
             $successCount++
