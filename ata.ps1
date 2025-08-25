@@ -89,9 +89,9 @@ if ($hasSubImages -and ($subDirs.Count -gt 0)) {
 # 获取最终要处理的文件列表
 # --------------------------
 if ($doRecursive) {
-    $files = Get-ChildItem -Path $TargetDir -Include *.jpg, *.jpeg, *.png -File -Recurse
+    $files = Get-ChildItem -Path $TargetDir -Recurse -File | Where-Object { $_.Extension -match "^\.(jpg|jpeg|png)$" }
 } else {
-    $files = Get-ChildItem -Path $TargetDir -Include *.jpg, *.jpeg, *.png -File
+    $files = Get-ChildItem -Path $TargetDir -File | Where-Object { $_.Extension -match "^\.(jpg|jpeg|png)$" }
 }
 
 # --------------------------
