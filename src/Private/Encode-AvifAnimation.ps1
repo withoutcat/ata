@@ -7,7 +7,7 @@
         [int]$Crf = 28,
         [int]$Speed = 5,
         [int]$Threads,
-        [switch]$Debug
+        [switch]$ShowDebug
     )
 
     $pix = if ($Alpha) { 'yuva420p' } else { 'yuv420p' }
@@ -37,7 +37,7 @@
     $null = $p.Start()
     $p.WaitForExit()
 
-    if ($Debug) {
+    if ($ShowDebug) {
         $out = $p.StandardOutput.ReadToEnd()
         $err = $p.StandardError.ReadToEnd()
         if ($out) { Write-Output $out }

@@ -1,6 +1,6 @@
 ﻿param(
     [string]$TargetDir,
-    [Alias('dbg')][switch]$Debug,      # -debug 显示 ffmpeg 日志（别名：-dbg）
+    [Alias('dbg')][switch]$ShowDebug,      # -debug 显示 ffmpeg 日志（别名：-dbg）
     [Alias('del','d')][switch]$Delete,     # -d 删除原图片（别名：-del, -d）
     [switch]$Force,      # -f 忽略数量和文件夹检查
     [switch]$Recursive   # -r 直接递归
@@ -12,7 +12,7 @@ Import-Module -Force -Name "$PSScriptRoot\module\ata.psm1"
 if ($TargetDir -and ($TargetDir -eq 'ani')) {
     $nextArg = $args | Select-Object -First 1
     if (-not $nextArg) { Write-Host "用法：ata ani <目录>" -ForegroundColor Yellow; exit 1 }
-    Create-AvifAnimation -InputDir $nextArg -Debug:$Debug
+    Create-AvifAnimation -InputDir $nextArg -ShowDebug:$ShowDebug
     exit 0
 }
 
@@ -22,4 +22,4 @@ if (-not $TargetDir -or $TargetDir -in @("/help", "-h", "--help")) {
     exit 0
 }
 
-Convert-Images -TargetDir $TargetDir -Debug:$Debug -Delete:$Delete -Force:$Force -Recursive:$Recursive
+Convert-Images -TargetDir $TargetDir -ShowDebug:$ShowDebug -Delete:$Delete -Force:$Force -Recursive:$Recursive

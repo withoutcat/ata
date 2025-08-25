@@ -1,7 +1,7 @@
 ﻿function Convert-Images {
     param(
         [string]$TargetDir,
-        [switch]$Debug,
+        [switch]$ShowDebug,
         [switch]$Delete,
         [switch]$Force,
         [switch]$Recursive
@@ -25,7 +25,7 @@
     Write-Host "准备转换目录：" $TargetDir -ForegroundColor Cyan
 
     # 处理 Debug 参数（仅由开关决定）
-    $DebugMode = [bool]$Debug
+    $DebugMode = [bool]$ShowDebug
 
     # 检测子文件夹是否有图片
     $detect = Detect-SubImages -TargetDir $TargetDir -IncludePatterns $IncludePatterns

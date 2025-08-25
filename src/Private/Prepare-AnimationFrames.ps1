@@ -7,7 +7,7 @@
         [string]$Background = 'black',
         [switch]$Alpha,
         [switch]$KeepTemp,
-        [switch]$Debug
+        [switch]$ShowDebug
     )
 
     if (-not $InputFiles -or $InputFiles.Count -lt 2) {
@@ -75,7 +75,7 @@
         $null = $p.Start()
         $p.WaitForExit()
 
-        if ($Debug) {
+        if ($ShowDebug) {
             $out = $p.StandardOutput.ReadToEnd()
             $err = $p.StandardError.ReadToEnd()
             if ($out) { Write-Output $out }

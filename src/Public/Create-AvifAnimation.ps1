@@ -11,7 +11,7 @@
         [int]$Crf = 28,
         [int]$Speed = 5,
         [int]$Threads,
-        [Alias('dbg')][switch]$Debug
+        [Alias('dbg')][switch]$ShowDebug
     )
 
     if (-not (Test-Path $InputDir)) {
@@ -25,15 +25,15 @@
 
     if (-not $Output) {
         $baseName = Split-Path -Leaf $InputDir
-        $Output = Join-Path (Split-Path -Parent $InputDir) ($baseName + '.avif')
+        $Output = Join-Path $InputDir ($baseName + '.avif')
         $Output = Get-UniqueOutputPath -OutputPath $Output
     }
 
     # 准备帧序列（统一尺寸与像素格式，输出为 PNG 序列）
-    $prep = Prepare-AnimationFrames -InputFiles $avifFiles.FullName -Width $Width -Height $Height -ScaleMode $ScaleMode -Background $Background -Alpha:$Alpha -Debug:$Debug
+    $prep = Prepare-AnimationFrames -InputFiles $avifFiles.FullName -Width $Width -Height $Height -ScaleMode $ScaleMode -Background $Background -Alpha:$Alpha -ShowDebug:$ShowDebug
 
     # 编码为 AVIF 动画
-    Encode-AvifAnimation -FramesDir $prep.FramesDir -Fps $Fps -Output $Output -Alpha:$Alpha -Crf $Crf -Speed $Speed -Threads $Threads -Debug:$Debug
+    Encode-AvifAnimation -FramesDir $prep.FramesDir -Fps $Fps -Output $Output -Alpha:$Alpha -Crf $Crf -Speed $Speed -Threads $Threads -ShowDebug:$ShowDebug
 
     # 清理临时目录
     if (-not $prep.KeepTemp) {
