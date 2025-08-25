@@ -8,9 +8,7 @@
 
 Add-Type -AssemblyName Microsoft.VisualBasic
 
-# --------------------------
 # 帮助文档函数
-# --------------------------
 function Show-Help {
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
     Write-Host "ata - 图片批量转换为 AVIF (PowerShell 版本)" -ForegroundColor Cyan
@@ -23,38 +21,30 @@ function Show-Help {
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
 }
 
-# --------------------------
 # 默认显示帮助
-# --------------------------
-if (-not $TargetDir -or $TargetDir -in @("/help","-h","--help")) {
+if (-not $TargetDir -or $TargetDir -in @("/help", "-h", "--help")) {
     Show-Help
     exit 0
 }
 
-# --------------------------
 # 处理路径
-# ./ 或 / 表示当前目录
-# --------------------------
-if ($TargetDir -in @("./","/")) {
+if ($TargetDir -in @("./", "/")) {
     $TargetDir = Get-Location
 }
 
+$TargetDir = Convert-Path $TargetDir
 if (-not (Test-Path $TargetDir)) {
     Write-Host "目录不存在：" $TargetDir -ForegroundColor Red
     exit 1
 }
 
-$TargetDir = $TargetDir.TrimEnd('\','/')
+$TargetDir = $TargetDir.TrimEnd('\', '/')
 Write-Host "准备转换目录：" $TargetDir -ForegroundColor Cyan
 
-# --------------------------
 # 处理大小写不敏感 Debug 参数
-# --------------------------
 $DebugMode = $Debug -or ($PSBoundParameters.Keys | Where-Object { $_.ToLower() -eq "debug" })
 
-# --------------------------
 # 检测子文件夹是否有图片
-# --------------------------
 $subDirs = Get-ChildItem -Path $TargetDir -Directory
 $hasSubImages = $false
 foreach ($d in $subDirs) {
@@ -64,11 +54,7 @@ foreach ($d in $subDirs) {
     }
 }
 
-# --------------------------
 # 确定是否递归
-# -r 或 -f 跳过提示
-# 否则提示用户
-# --------------------------
 $doRecursive = $false
 if ($hasSubImages -and ($subDirs.Count -gt 0)) {
     if ($Recursive -or $Force) {
@@ -79,10 +65,7 @@ if ($hasSubImages -and ($subDirs.Count -gt 0)) {
     }
 }
 
-# --------------------------
 # 是否删除原图片
-# 如果没有指定 -d 参数，就提示用户
-# --------------------------
 $deleteOriginal = $Delete
 if (-not $Delete) {
     $choice = Read-Host "是否删除原图片？(D 删除 / S 保留)"
@@ -92,75 +75,74 @@ if (-not $Delete) {
         $deleteOriginal = $false
     }
 }
+$null = $deleteOriginal
 
-# --------------------------
 # 获取最终要处理的文件列表
-# --------------------------
 if ($doRecursive) {
-    $files = Get-ChildItem -Path $TargetDir -Recurse -Include *.jpg, *.jpeg, *.png -File
+    $files = Get-ChildItem -Path $TargetDir -Recurse -File -Depth 3 | Where-Object {
+        $_.Extension -in ".jpg", ".jpeg", ".png"
+    }
 } else {
-    $files = Get-ChildItem -Path $TargetDir\* -Include *.jpg, *.jpeg, *.png -File
+    $files = Get-ChildItem -Path $TargetDir -File | Where-Object {
+        $_.Extension -in ".jpg", ".jpeg", ".png"
+    }
 }
 
-# --------------------------
 # 图片数量提示
-# --------------------------
 $totalFiles = $files.Count
 if ($totalFiles -gt 200 -and -not $Force) {
     $choice = Read-Host "发现 $totalFiles 张可转换图片，是否继续？(Y/N)"
     if ($choice.ToUpper() -ne "Y") { exit 0 }
 }
 
-# --------------------------
 # 转换计数器
-# --------------------------
 $successCount = 0
 $failCount = 0
 
-# --------------------------
 # 开始处理每个文件
-# --------------------------
+$index = 0
 foreach ($f in $files) {
+    $index++
+    Write-Progress -Activity "转换图片" -Status "处理 $($f.Name) ($index/$totalFiles)" -PercentComplete ($index / $totalFiles * 100)
     $out = Join-Path $f.DirectoryName ($f.BaseName + ".avif")
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
     try {
-        $ffmpegArgs = "-i `"$($f.FullName)`" -c:v libaom-av1 -still-picture 1 -crf 28 -pix_fmt yuv420p `"$out`""
+        $ffmpegArgs = "-i `"$($f.FullName)`" -c:v libaom-av1 -still-picture 1 -crf 28 -pix_fmt yuv420p `"$([System.IO.Path]::GetFullPath($out))`""
 
-        # --------------------------
         # 调用 ffmpeg
-        # --------------------------
         $processInfo = New-Object System.Diagnostics.ProcessStartInfo
         $processInfo.FileName = "ffmpeg"
         $processInfo.Arguments = $ffmpegArgs
         $processInfo.UseShellExecute = $false
         $processInfo.CreateNoWindow = $true
         $processInfo.RedirectStandardOutput = $true
-        $processInfo.RedirectStandardError  = $true
+        $processInfo.RedirectStandardError = $true
 
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $processInfo
         $process.Start()
 
+        $timeout = 30000  # 30秒超时
         if ($DebugMode) {
-            # 把 ffmpeg 日志转发到当前控制台
-            $process.StandardOutput.BaseStream.CopyTo([Console]::OpenStandardOutput())
-            $process.StandardError.BaseStream.CopyTo([Console]::OpenStandardError())
+            $process.WaitForExit()
+            $stdout = $process.StandardOutput.ReadToEnd()
+            $stderr = $process.StandardError.ReadToEnd()
+            if ($stdout) { Write-Output $stdout }
+            if ($stderr) { Write-Output $stderr }
         } else {
-            # 吃掉输出，避免缓冲区阻塞
-            $null = $process.StandardOutput.ReadToEnd()
-            $null = $process.StandardError.ReadToEnd()
+            if (-not $process.WaitForExit($timeout)) {
+                $process.Kill()
+                $failCount++
+                Write-Host "$($f.Name) 转换超时，耗时 $($stopwatch.ElapsedMilliseconds) ms" -ForegroundColor Red
+                continue
+            }
         }
 
-        $process.WaitForExit()
-        $stopwatch.Stop()
-
-        # --------------------------
         # 检查输出文件，删除原图
-        # --------------------------
         if (Test-Path $out) {
             if ($deleteOriginal) {
-                [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($f.FullName, 'OnlyErrorDialogs', 'SendToRecycleBin')
+                Remove-Item $f.FullName -Force
             }
             $successCount++
             Write-Host "$($f.Name) 转换成功，耗时 $($stopwatch.ElapsedMilliseconds) ms" -ForegroundColor Green
@@ -176,8 +158,6 @@ foreach ($f in $files) {
     }
 }
 
-# --------------------------
 # 总结
-# --------------------------
 Write-Host "--------------------------------------------------" -ForegroundColor Cyan
 Write-Host "转换完成，总计成功：$successCount 张，失败：$failCount 张" -ForegroundColor Cyan
