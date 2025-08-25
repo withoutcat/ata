@@ -46,11 +46,11 @@
         $index++
         $dst = Join-Path $framesDir ("frame_" + $index.ToString("00000") + ".png")
 
-        # 缩放/裁切/留边滤镜
+        # 缩放/裁切/留边滤镜 - 使用字符串格式化避免变量引用问题
         $vf = switch ($ScaleMode) {
-            'contain' { "scale='min($Width,iw)':'min($Height,ih)':force_original_aspect_ratio=decrease,pad=$Width:$Height:(ow-iw)/2:(oh-ih)/2:color=$Background" }
-            'cover'   { "scale='max($Width,iw)':'max($Height,ih)':force_original_aspect_ratio=increase,crop=$Width:$Height" }
-            'stretch' { "scale=$Width:$Height" }
+            'contain' { "scale='min($Width,iw)':'min($Height,ih)':force_original_aspect_ratio=decrease,pad={0}:{1}:(ow-iw)/2:(oh-ih)/2:color=$Background" -f $Width, $Height }
+            'cover'   { "scale='max($Width,iw)':'max($Height,ih)':force_original_aspect_ratio=increase,crop={0}:{1}" -f $Width, $Height }
+            'stretch' { "scale={0}:{1}" -f $Width, $Height }
         }
 
         $args = @(
