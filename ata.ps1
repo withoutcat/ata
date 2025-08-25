@@ -21,6 +21,25 @@ function Show-Help {
     Write-Host "--------------------------------------------------" -ForegroundColor Cyan
 }
 
+# 生成唯一输出文件名
+function Get-UniqueOutputPath {
+    param (
+        [string]$OutputPath
+    )
+    $directory = [System.IO.Path]::GetDirectoryName($OutputPath)
+    $baseName = [System.IO.Path]::GetFileNameWithoutExtension($OutputPath)
+    $extension = [System.IO.Path]::GetExtension($OutputPath)
+    $counter = 0
+    $newPath = $OutputPath
+
+    while (Test-Path $newPath) {
+        $counter++
+        $newBaseName = "$baseName ($counter)"
+        $newPath = Join-Path $directory "$newBaseName$extension"
+    }
+    return $newPath
+}
+
 # 默认显示帮助
 if (-not $TargetDir -or $TargetDir -in @("/help", "-h", "--help")) {
     Show-Help
@@ -105,6 +124,7 @@ foreach ($f in $files) {
     $index++
     Write-Progress -Activity "转换图片" -Status "处理 $($f.Name) ($index/$totalFiles)" -PercentComplete ($index / $totalFiles * 100)
     $out = Join-Path $f.DirectoryName ($f.BaseName + ".avif")
+    $out = Get-UniqueOutputPath -OutputPath $out
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
     try {
