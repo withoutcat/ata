@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 echo Building ATA...
 
 :: Create bin directory if it doesn't exist

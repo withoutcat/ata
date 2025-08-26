@@ -62,12 +62,22 @@
             "showLog": true
         },
         {
-            "name": "Debug ATA - Custom Args",
+            "name": "Debug ATA - Custom Args (选择)",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/ata-go/cmd/ata",
-            "args": ["${input:customArgs}"],
+            "args": "${input:customArgs}",
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - Custom Args (输入)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": "${input:customArgsInput}",
             "env": {},
             "showLog": true
         }
@@ -75,7 +85,20 @@
      "inputs": [
          {
              "id": "customArgs",
-             "description": "输入自定义调试参数",
+             "description": "选择调试参数组合",
+             "type": "pickString",
+             "options": [
+                 "help",
+                 "convert C:\\Users\\sunzi\\Desktop\\不能看",
+                 "convert ./test -d",
+                 "convert ./images -d -s -f",
+                 "ani ./frames output.avif -fps 24",
+                 "ppt ./slides presentation.avif -fps 1"
+             ]
+         },
+         {
+             "id": "customArgsInput",
+             "description": "输入自定义调试参数 (空格分隔)",
              "default": "help",
              "type": "promptString"
          }
