@@ -1,51 +1,16 @@
-@echo off
-setlocal enabledelayedexpansion
+﻿@echo off
+echo Installing ATA using PowerShell script...
+echo.
 
-echo 正在安装ATA...
-
-:: 检查ata.exe是否存在
-if not exist "%~dp0\bin\ata.exe" (
-    echo 错误: 找不到ata.exe文件
-    echo 请先编译项目，然后再运行安装脚本
+:: Check if PowerShell script exists
+if not exist "%~dp0\install-powershell.ps1" (
+    echo Error: install-powershell.ps1 not found
+    echo Please ensure the PowerShell installation script is in the same directory
     exit /b 1
 )
 
-:: 创建bin目录（如果不存在）
-if not exist "%USERPROFILE%\bin" (
-    mkdir "%USERPROFILE%\bin"
-    echo 已创建 %USERPROFILE%\bin 目录
-)
-
-:: 复制ata.exe到bin目录
-copy /Y "%~dp0\bin\ata.exe" "%USERPROFILE%\bin\ata.exe" > nul
-echo 已复制 ata.exe 到 %USERPROFILE%\bin
-
-:: 检查PATH环境变量中是否已包含bin目录
-echo 正在检查PATH环境变量...
-set "binPath=%USERPROFILE%\bin"
-set "found=0"
-
-for /f "tokens=*" %%a in ('echo !PATH!') do (
-    set "currentPath=%%a"
-    if "!currentPath!"=="!binPath!" (
-        set "found=1"
-    )
-    if "!currentPath!"=="!binPath!;" (
-        set "found=1"
-    )
-)
-
-:: 如果PATH中不包含bin目录，则添加
-if "!found!"=="0" (
-    setx PATH "%PATH%;%USERPROFILE%\bin"
-    echo 已将 %USERPROFILE%\bin 添加到PATH环境变量
-) else (
-    echo %USERPROFILE%\bin 已在PATH环境变量中
-)
+:: Run PowerShell installation script
+powershell -ExecutionPolicy Bypass -File "%~dp0\install-powershell.ps1"
 
 echo.
-echo 安装完成！
-echo 请重新打开命令提示符或PowerShell窗口以使用ata命令
-echo.
-
-pause
+echo Batch script completed. Check above output for installation status.

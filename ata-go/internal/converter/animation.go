@@ -2,7 +2,6 @@ package converter
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -253,12 +252,6 @@ func encodeAvifAnimation(framesDir, outputPath string, fps, crf, speed, threads 
 	pixFmt := "yuv420p"
 	if alpha {
 		pixFmt = "yuva420p"
-	}
-
-	// 构建线程参数
-	threadParam := ""
-	if threads > 0 {
-		threadParam = fmt.Sprintf("-threads %d", threads)
 	}
 
 	// 构建FFmpeg命令

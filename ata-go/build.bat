@@ -1,27 +1,25 @@
-@echo off
-echo 正在构建ATA...
+﻿@echo off
+echo Building ATA...
 
-:: 创建bin目录（如果不存在）
+:: Create bin directory if it doesn't exist
 if not exist "%~dp0\bin" (
     mkdir "%~dp0\bin"
-    echo 已创建bin目录
+    echo Created bin directory
 )
 
-:: 编译项目
-echo 正在编译...
+:: Compile project
+echo Compiling...
 cd /d "%~dp0"
 go build -o bin/ata.exe cmd/ata/main.go
 
 if %ERRORLEVEL% neq 0 (
-    echo 构建失败！
+    echo Build failed!
     exit /b 1
 )
 
-echo 构建成功！
-echo 可执行文件已生成: %~dp0\bin\ata.exe
+echo Build successful!
+echo Executable generated: %~dp0\bin\ata.exe
 
 echo.
-echo 要安装ATA，请运行install.bat
+echo To install ATA, run install.bat
 echo.
-
-pause

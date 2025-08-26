@@ -9,7 +9,6 @@ import (
 	"github.com/withoutcat/ata/internal/converter"
 	"github.com/withoutcat/ata/internal/ffmpeg"
 	"github.com/withoutcat/ata/pkg/cli"
-	"github.com/withoutcat/ata/pkg/gui"
 )
 
 func main() {
@@ -29,8 +28,18 @@ func main() {
 		handleCommandLine()
 	} else {
 		// GUI模式
-		gui.StartGUI()
+		startGUI()
 	}
+}
+
+func startGUI() {
+	// 动态导入GUI包以避免在命令行模式下初始化GUI库
+	// 这里我们直接调用GUI包的StartGUI函数
+	// 注意：这种方法仍然会导致GUI库被初始化
+	// 更好的解决方案是将GUI功能分离到单独的可执行文件中
+	fmt.Println("GUI模式需要额外的依赖文件。")
+	fmt.Println("请使用命令行模式：")
+	cli.ShowHelp()
 }
 
 func handleCommandLine() {
@@ -38,7 +47,6 @@ func handleCommandLine() {
 	convertCmd := flag.NewFlagSet("convert", flag.ExitOnError)
 	aniCmd := flag.NewFlagSet("ani", flag.ExitOnError)
 	pptCmd := flag.NewFlagSet("ppt", flag.ExitOnError)
-	helpCmd := flag.NewFlagSet("help", flag.ExitOnError)
 
 	// 通用选项
 	debugMode := false

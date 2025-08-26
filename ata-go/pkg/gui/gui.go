@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -87,7 +86,6 @@ func setupConvertTab(tab *vcl.TTabSheet) {
 	browseBtn.SetWidth(80)
 	browseBtn.SetOnClick(func(sender vcl.IObject) {
 		selDialog := vcl.NewSelectDirectoryDialog(panel)
-		selDialog.SetOptions(selDialog.Options().Include(types.OdoShowShares))
 		if selDialog.Execute() {
 			pathEdit.SetText(selDialog.FileName())
 		}
@@ -243,7 +241,6 @@ func setupAniTab(tab *vcl.TTabSheet) {
 	inputBrowseBtn.SetWidth(80)
 	inputBrowseBtn.SetOnClick(func(sender vcl.IObject) {
 		selDialog := vcl.NewSelectDirectoryDialog(panel)
-		selDialog.SetOptions(selDialog.Options().Include(types.OdoShowShares))
 		if selDialog.Execute() {
 			inputEdit.SetText(selDialog.FileName())
 		}
@@ -604,7 +601,6 @@ func setupPptTab(tab *vcl.TTabSheet) {
 	inputBrowseBtn.SetWidth(80)
 	inputBrowseBtn.SetOnClick(func(sender vcl.IObject) {
 		selDialog := vcl.NewSelectDirectoryDialog(panel)
-		selDialog.SetOptions(selDialog.Options().Include(types.OdoShowShares))
 		if selDialog.Execute() {
 			inputEdit.SetText(selDialog.FileName())
 		}
