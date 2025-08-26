@@ -36,9 +36,28 @@ func main() {
 
 已为你创建了 `.trae/launch.json` 配置文件，包含以下调试配置：
 
-- **Debug ATA - Help**: 调试help命令
-- **Debug ATA - GUI Mode**: 调试GUI模式
-- **Debug ATA - Convert**: 调试转换功能
+#### F5调试传参方法
+
+在Trae中使用F5调试时，有多种方式传递参数：
+
+**方法1: 选择预定义配置**
+按 `F5` 后选择以下配置之一：
+- **Debug ATA - Help**: `help`
+- **Debug ATA - GUI Mode**: 无参数（GUI模式）
+- **Debug ATA - Convert**: `convert ./test -d`
+- **Debug ATA - Convert Recursive**: `convert ./images -d -s -f`
+- **Debug ATA - Animation**: `ani ./frames output.avif -fps 24 -crf 20`
+- **Debug ATA - PPT Animation**: `ppt ./slides presentation.avif -fps 1`
+- **Debug ATA - Custom Args**: 动态输入任意参数 ⭐
+
+**方法2: 使用自定义参数**
+选择 "Debug ATA - Custom Args" 配置，Trae会弹出输入框让你输入自定义参数，例如：
+```
+convert ./myimages -d -s -r
+ani ./sequence output.avif -fps 30 -crf 15
+```
+
+#### 设置断点调试
 
 使用方法：
 1. 在代码中设置断点（点击行号左侧的空白处）
