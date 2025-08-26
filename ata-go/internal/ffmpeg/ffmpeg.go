@@ -25,33 +25,13 @@ func GetFFmpegPath() string {
 
 // FindFFmpegPath 查找FFmpeg可执行文件的路径
 func FindFFmpegPath() (string, error) {
-	// 首先尝试在项目目录下查找
-	execPath, err := os.Executable()
-	if err != nil {
-		return "", fmt.Errorf("无法获取可执行文件路径: %v", err)
-	}
-
-	execDir := filepath.Dir(execPath)
-	// 尝试在可执行文件同级目录的ffmpeg子目录中查找
-	relativePath := filepath.Join(execDir, "ffmpeg", "bin", "ffmpeg.exe")
-	if _, statErr := os.Stat(relativePath); statErr == nil {
-		return relativePath, nil
-	}
-	
-	// 尝试在上级目录的ffmpeg子目录中查找（适用于开发环境）
-	parentPath := filepath.Join(execDir, "..", "ffmpeg", "bin", "ffmpeg.exe")
-	if _, err := os.Stat(parentPath); err == nil {
-		return parentPath, nil
-	}
-
-	// 如果在相对路径中找不到，尝试在PATH中查找
+	// 在系统PATH中查找FFmpeg
 	pathFFmpeg, err := exec.LookPath("ffmpeg")
 	if err == nil {
-		fmt.Println("警告: 使用系统PATH中的FFmpeg")
 		return pathFFmpeg, nil
 	}
 
-	return "", errors.New("找不到FFmpeg可执行文件，请确保FFmpeg已安装并添加到PATH中，或者将其放置在正确的相对路径下")
+	return "", errors.New("找不到FFmpeg可执行文件，请确保FFmpeg已安装并添加到系统PATH环境变量中")
 }
 
 // ExecuteFFmpeg 执行FFmpeg命令

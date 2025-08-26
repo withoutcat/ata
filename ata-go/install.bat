@@ -20,18 +20,6 @@ if not exist "%USERPROFILE%\bin" (
 copy /Y "%~dp0\bin\ata.exe" "%USERPROFILE%\bin\ata.exe" > nul
 echo 已复制 ata.exe 到 %USERPROFILE%\bin
 
-:: 创建ffmpeg目录（如果不存在）
-if not exist "%USERPROFILE%\bin\ffmpeg\bin" (
-    mkdir "%USERPROFILE%\bin\ffmpeg\bin"
-    echo 已创建 %USERPROFILE%\bin\ffmpeg\bin 目录
-)
-
-:: 复制ffmpeg文件
-copy /Y "%~dp0\ffmpeg\bin\ffmpeg.exe" "%USERPROFILE%\bin\ffmpeg\bin\" > nul
-copy /Y "%~dp0\ffmpeg\bin\ffprobe.exe" "%USERPROFILE%\bin\ffmpeg\bin\" > nul
-copy /Y "%~dp0\ffmpeg\bin\ffplay.exe" "%USERPROFILE%\bin\ffmpeg\bin\" > nul
-echo 已复制 FFmpeg 文件到 %USERPROFILE%\bin\ffmpeg\bin
-
 :: 检查PATH环境变量中是否已包含bin目录
 echo 正在检查PATH环境变量...
 set "binPath=%USERPROFILE%\bin"

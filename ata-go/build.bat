@@ -1,13 +1,6 @@
 @echo off
 echo 正在构建ATA...
 
-:: 检查ffmpeg是否已设置
-if not exist "%~dp0\ffmpeg\bin\ffmpeg.exe" (
-    echo 警告：找不到FFmpeg文件！
-    echo 请先运行setup_ffmpeg.bat设置FFmpeg环境
-    exit /b 1
-)
-
 :: 创建bin目录（如果不存在）
 if not exist "%~dp0\bin" (
     mkdir "%~dp0\bin"

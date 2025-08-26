@@ -16,21 +16,54 @@
 
 2. **PowerShell脚本**：原有的PowerShell脚本(`*.ps1`文件)仅作为重构参考，不再参与实际代码运行。新版本完全使用Go语言实现所有功能。
 
+## 环境要求
+
+### FFmpeg 安装
+
+本工具依赖FFmpeg进行图像和视频处理，请确保FFmpeg已安装并添加到系统PATH环境变量中。
+
+#### 方法一：使用Chocolatey安装（推荐）
+
+1. 安装Chocolatey（如果尚未安装）：
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+   ```
+
+2. 使用Chocolatey安装FFmpeg：
+   ```powershell
+   choco install ffmpeg
+   ```
+
+#### 方法二：手动安装
+
+1. 访问FFmpeg官网下载页面：https://ffmpeg.org/download.html
+2. 选择Windows版本，推荐下载"release builds"
+3. 解压下载的文件到合适位置（如`C:\ffmpeg`）
+4. 将FFmpeg的bin目录添加到系统PATH环境变量：
+   - 打开"系统属性" → "高级" → "环境变量"
+   - 在"系统变量"中找到"Path"，点击"编辑"
+   - 添加FFmpeg的bin目录路径（如`C:\ffmpeg\bin`）
+   - 点击"确定"保存
+
+#### 验证安装
+
+打开命令提示符或PowerShell，运行以下命令验证FFmpeg是否正确安装：
+```
+ffmpeg -version
+```
+
+如果显示FFmpeg版本信息，说明安装成功。
+
 ## 安装与使用
 
-### 环境准备
+### 构建和安装
 
-1. 运行`setup_ffmpeg.bat`设置FFmpeg环境：
-   ```
-   setup_ffmpeg.bat
-   ```
-
-2. 构建项目：
+1. 构建项目：
    ```
    build.bat
    ```
 
-3. 安装到系统：
+2. 安装到系统：
    ```
    install.bat
    ```
