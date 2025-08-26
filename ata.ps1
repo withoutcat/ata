@@ -1,6 +1,6 @@
 ﻿param(
     [string]$TargetDir,
-    [Alias('dbg')][switch]$ShowDebug,      # -debug 显示 ffmpeg 日志（别名：-dbg）
+    [Alias('debug')][switch]$ShowDebug,      # -debug 显示 ffmpeg 日志
     [Alias('del','d')][switch]$Delete,     # -d 删除原图片（别名：-del, -d）
     [switch]$Force,      # -f 忽略数量和文件夹检查
     [switch]$Recursive   # -r 直接递归
