@@ -1,6 +1,17 @@
 @echo off
-echo Installing ATA using PowerShell script...
+echo Installing ATA...
 echo.
+
+:: First, build the latest version
+echo Step 1: Building latest version...
+call "%~dp0\build.bat"
+if %ERRORLEVEL% neq 0 (
+    echo Build failed! Cannot proceed with installation.
+    exit /b 1
+)
+
+echo.
+echo Step 2: Installing to user bin directory...
 
 :: Check if PowerShell script exists
 if not exist "%~dp0\install-powershell.ps1" (
@@ -13,4 +24,4 @@ if not exist "%~dp0\install-powershell.ps1" (
 powershell -ExecutionPolicy Bypass -File "%~dp0\install-powershell.ps1"
 
 echo.
-echo Batch script completed. Check above output for installation status.
+echo Installation completed. Check above output for status.

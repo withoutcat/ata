@@ -1,7 +1,7 @@
 # PowerShell installation script for ATA
-# This script adds ATA to PowerShell profile to avoid PATH length limitations
+# This script copies ATA to user bin directory and adds it to PATH
 
-Write-Host "Installing ATA for PowerShell..." -ForegroundColor Green
+Write-Host "Installing ATA..." -ForegroundColor Green
 
 # Check if ata.exe exists
 $ataPath = Join-Path $PSScriptRoot "bin\ata.exe"
@@ -22,25 +22,7 @@ if (-not (Test-Path $binDir)) {
 Copy-Item $ataPath $binDir -Force
 Write-Host "Copied ata.exe to $binDir" -ForegroundColor Green
 
-# Get PowerShell profile path
-$profilePath = $PROFILE.CurrentUserCurrentHost
-$profileDir = Split-Path $profilePath -Parent
-
-# Create profile directory if it doesn't exist
-if (-not (Test-Path $profileDir)) {
-    New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
-    Write-Host "Created PowerShell profile directory: $profileDir" -ForegroundColor Yellow
-}
-
-# Check if profile exists and contains ata alias
-$aliasLine = "Set-Alias -Name ata -Value '$binDir\ata.exe'"
-$profileExists = Test-Path $profilePath
-$aliasExists = $false
-
-if ($profileExists) {
-    $profileContent = Get-Content $profilePath -Raw
-    $aliasExists = $profileContent -match "Set-Alias.*ata.*ata\.exe"
-}
+# No PowerShell profile setup needed - using PATH only
 
 # Add to PATH environment variable (more universal solution)
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
@@ -53,21 +35,11 @@ if ($currentPath -notlike "*$binDir*") {
     Write-Host "$binDir already exists in user PATH" -ForegroundColor Yellow
 }
 
-# Also add PowerShell alias as fallback
-if (-not $aliasExists) {
-    if ($profileExists) {
-        Add-Content $profilePath "`n# ATA alias (fallback)"
-        Add-Content $profilePath $aliasLine
-    } else {
-        Set-Content $profilePath "# ATA alias (fallback)`n$aliasLine"
-    }
-    Write-Host "Added ata alias to PowerShell profile as fallback: $profilePath" -ForegroundColor Green
-} else {
-    Write-Host "ATA alias already exists in PowerShell profile" -ForegroundColor Yellow
-}
+# PATH-based installation complete
 
 Write-Host "`nInstallation complete!" -ForegroundColor Green
-Write-Host "ATA has been added to your PATH environment variable." -ForegroundColor Cyan
-Write-Host "You can now use 'ata' command in any terminal (CMD, PowerShell, Git Bash, etc.)" -ForegroundColor Cyan
-Write-Host "If the command is not recognized immediately, please restart your terminal." -ForegroundColor Yellow
-Write-Host "`nTest the installation by running: ata help" -ForegroundColor White
+Write-Host "ATA executable copied to: $binDir" -ForegroundColor Cyan
+Write-Host "Added to PATH environment variable for current user" -ForegroundColor Cyan
+Write-Host "You can now use 'ata' command in any terminal" -ForegroundColor Cyan
+Write-Host "Note: Restart your terminal if the command is not recognized immediately" -ForegroundColor Yellow
+Write-Host "`nTest the installation: ata help" -ForegroundColor White
