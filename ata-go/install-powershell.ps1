@@ -42,20 +42,32 @@ if ($profileExists) {
     $aliasExists = $profileContent -match "Set-Alias.*ata.*ata\.exe"
 }
 
-# Add alias to profile if it doesn't exist
+# Add to PATH environment variable (more universal solution)
+$currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+if ($currentPath -notlike "*$binDir*") {
+    $newPath = "$currentPath;$binDir"
+    [Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
+    Write-Host "Added $binDir to user PATH environment variable" -ForegroundColor Green
+    Write-Host "Note: You may need to restart your terminal for PATH changes to take effect" -ForegroundColor Yellow
+} else {
+    Write-Host "$binDir already exists in user PATH" -ForegroundColor Yellow
+}
+
+# Also add PowerShell alias as fallback
 if (-not $aliasExists) {
     if ($profileExists) {
-        Add-Content $profilePath "`n# ATA alias`"
+        Add-Content $profilePath "`n# ATA alias (fallback)"
         Add-Content $profilePath $aliasLine
     } else {
-        Set-Content $profilePath "# ATA alias`n$aliasLine"
+        Set-Content $profilePath "# ATA alias (fallback)`n$aliasLine"
     }
-    Write-Host "Added ata alias to PowerShell profile: $profilePath" -ForegroundColor Green
+    Write-Host "Added ata alias to PowerShell profile as fallback: $profilePath" -ForegroundColor Green
 } else {
     Write-Host "ATA alias already exists in PowerShell profile" -ForegroundColor Yellow
 }
 
 Write-Host "`nInstallation complete!" -ForegroundColor Green
-Write-Host "To use the 'ata' command in current session, run: Set-Alias -Name ata -Value '$binDir\ata.exe'" -ForegroundColor Cyan
-Write-Host "Or restart PowerShell to load the alias from profile" -ForegroundColor Cyan
+Write-Host "ATA has been added to your PATH environment variable." -ForegroundColor Cyan
+Write-Host "You can now use 'ata' command in any terminal (CMD, PowerShell, Git Bash, etc.)" -ForegroundColor Cyan
+Write-Host "If the command is not recognized immediately, please restart your terminal." -ForegroundColor Yellow
 Write-Host "`nTest the installation by running: ata help" -ForegroundColor White
