@@ -1,0 +1,14 @@
+# 忽略编译生成的可执行文件
+ata-go/bin/
+
+# 忽略临时文件
+*.tmp
+*.log
+
+# 忽略IDE配置文件
+.vscode/settings.json
+.idea/
+
+# 忽略操作系统生成的文件
+.DS_Store
+Thumbs.db

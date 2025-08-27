@@ -1,0 +1,106 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug ATA - Help",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": ["help"],
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - GUI Mode",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": [],
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - Convert",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": ["convert", "./test", "-d"],
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - Convert Recursive",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": ["convert", "./images", "-d", "-s", "-f"],
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - Animation",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": ["ani", "./frames", "output.avif", "-fps", "24", "-crf", "20"],
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - PPT Animation",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": ["ppt", "./slides", "presentation.avif", "-fps", "1"],
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - Custom Args (选择)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": "${input:customArgs}",
+            "env": {},
+            "showLog": true
+        },
+        {
+            "name": "Debug ATA - Custom Args (输入)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/ata-go/cmd/ata",
+            "args": "${input:customArgsInput}",
+            "env": {},
+            "showLog": true
+        }
+     ],
+     "inputs": [
+         {
+             "id": "customArgs",
+             "description": "选择调试参数组合",
+             "type": "pickString",
+             "options": [
+                 "help",
+                 "convert C:\\Users\\sunzi\\Desktop\\不能看",
+                 "convert ./test -d",
+                 "convert ./images -d -s -f",
+                 "ani ./frames output.avif -fps 24",
+                 "ppt ./slides presentation.avif -fps 1"
+             ]
+         },
+         {
+             "id": "customArgsInput",
+             "description": "输入自定义调试参数 (空格分隔)",
+             "default": "help",
+             "type": "promptString"
+         }
+     ]
+}
