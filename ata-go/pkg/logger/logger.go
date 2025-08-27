@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -65,8 +64,6 @@ type Logger struct {
 	failureCount int
 	showProgress bool
 	lastProgressLen int
-	usePowerShellProgress bool
-	progressActivityId int
 }
 
 // 全局logger实例
@@ -85,8 +82,6 @@ func Init(debugMode bool) {
 		failureCount: 0,
 		showProgress: true,
 		lastProgressLen: 0,
-		usePowerShellProgress: false,
-		progressActivityId: 1,
 	}
 	
 	// 设置标准log包的输出格式
@@ -206,47 +201,8 @@ func ShowStartSummary(total int) {
 	
 	// 如果有多个文件，显示初始进度条
 	if total > 1 {
-		// 如果使用PowerShell进度条，显示初始0%进度
-		if globalLogger != nil && globalLogger.usePowerShellProgress {
-			ShowProgress() // 显示0%进度
-		} else {
-			ShowProgress()
-		}
+		ShowProgress()
 	}
-}
-
-// ShowPowerShellProgress 使用PowerShell原生进度条
-func ShowPowerShellProgress() {
-	if globalLogger == nil || !globalLogger.showProgress || globalLogger.totalFiles <= 1 {
-		return
-	}
-	
-	processed := globalLogger.successCount + globalLogger.failureCount
-	percentage := int(float64(processed) / float64(globalLogger.totalFiles) * 100)
-	
-	// 构建PowerShell Write-Progress命令，使用简单的参数传递
-	activity := "FileConversion"
-	status := fmt.Sprintf("Processing_%d_of_%d", processed, globalLogger.totalFiles)
-	
-	// 构建PowerShell命令，避免复杂的字符串转义
-	psCmd := fmt.Sprintf("Write-Progress -Id %d -Activity %s -Status %s -PercentComplete %d",
-		globalLogger.progressActivityId, activity, status, percentage)
-	
-	// 执行PowerShell命令
-	cmd := exec.Command("powershell", "-NoProfile", "-Command", psCmd)
-	cmd.Run() // 忽略错误，因为这只是进度显示
-}
-
-// ClearPowerShellProgress 清除PowerShell进度条
-func ClearPowerShellProgress() {
-	if globalLogger == nil {
-		return
-	}
-	
-	// 使用-Completed参数清除进度条
-	psCmd := fmt.Sprintf(`Write-Progress -Id %d -Completed`, globalLogger.progressActivityId)
-	cmd := exec.Command("powershell", "-NoProfile", "-Command", psCmd)
-	cmd.Run() // 忽略错误
 }
 
 // ShowProgress 显示动态进度条
@@ -255,11 +211,7 @@ func ShowProgress() {
 		return
 	}
 	
-	// 如果在Windows上且启用了PowerShell进度条，使用PowerShell进度条
-	if globalLogger.usePowerShellProgress {
-		ShowPowerShellProgress()
-		return
-	}
+
 	
 	processed := globalLogger.successCount + globalLogger.failureCount
 	percentage := float64(processed) / float64(globalLogger.totalFiles) * 100
@@ -303,11 +255,7 @@ func ClearProgress() {
 		return
 	}
 	
-	// 如果在Windows上且启用了PowerShell进度条，清除PowerShell进度条
-	if globalLogger.usePowerShellProgress {
-		ClearPowerShellProgress()
-		return
-	}
+
 	
 	// 清除基于print的进度条
 	if globalLogger.lastProgressLen == 0 {
