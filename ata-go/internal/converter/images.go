@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"time"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -99,7 +100,9 @@ if err != nil {
 		return
 	}
 
-	fmt.Printf("转换: %s -> %s\n", filePath, outputPath)
+	fmt.Printf("转换: %s", outputPath)
+	//计时器开始
+	processStartTime := time.Now()
 
 	// 构建FFmpeg参数
 	args := []string{
@@ -120,6 +123,13 @@ if err != nil {
 		os.Remove(outputPath)
 		return
 	}
+	// 计时器结束
+	processEndTime := time.Now()
+	// 计算转换时间
+	processDuration := processEndTime.Sub(processStartTime)
+
+	// 打印转换成功信息
+	fmt.Printf(" 成功 (耗时: %v)\n", processDuration)
 
 	// 如果需要删除原始文件
 	if deleteOriginal {
