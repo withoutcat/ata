@@ -8,14 +8,39 @@ import (
 	"strings"
 
 	"github.com/withoutcat/ata/internal/ffmpeg"
+	"github.com/withoutcat/ata/pkg/logger"
 )
 
 // CreateAnimation 从图像序列创建AVIF动画
 func CreateAnimation(inputPath, outputPath string, fps, crf, speed, threads int, alpha bool, width, height int, scale float64, background string, debugMode, deleteOriginal, force bool) {
+	// 初始化logger
+	logger.Init(debugMode)
+	logger.ResetCounter()
+	
 	// 检查输入路径是否存在
 	fileInfo, err := os.Stat(inputPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: 无法访问路径 %s: %v\n", inputPath, err)
+		logger.Error("无法访问路径 %s: %v", inputPath, err)
+		return
+	}
+	
+	// 统计可处理的文件数量
+	var totalFiles int
+	if fileInfo.IsDir() {
+		totalFiles = countAnimationFiles(inputPath)
+	} else {
+		if isAnimationFile(inputPath) {
+			totalFiles = 1
+		} else {
+			totalFiles = 0
+		}
+	}
+	
+	// 显示开始处理的摘要
+	logger.ShowStartSummary(totalFiles)
+	
+	// 如果没有可处理的文件，直接返回
+	if totalFiles == 0 {
 		return
 	}
 
@@ -27,7 +52,7 @@ func CreateAnimation(inputPath, outputPath string, fps, crf, speed, threads int,
 	// 检查输出文件是否已存在
 	if !force {
 		if _, err := os.Stat(outputPath); err == nil {
-			fmt.Fprintf(os.Stderr, "错误: 输出文件已存在: %s，使用-f选项强制覆盖\n", outputPath)
+			logger.Error("输出文件已存在: %s，使用-f选项强制覆盖", outputPath)
 			return
 		}
 	}
@@ -35,7 +60,7 @@ func CreateAnimation(inputPath, outputPath string, fps, crf, speed, threads int,
 	// 创建临时目录用于存放处理后的帧
 	tempDir, err := os.MkdirTemp("", "ata-frames-*")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: 无法创建临时目录: %v\n", err)
+		logger.Error("无法创建临时目录: %v", err)
 		return
 	}
 	defer os.RemoveAll(tempDir) // 确保在函数结束时删除临时目录
@@ -50,25 +75,25 @@ func CreateAnimation(inputPath, outputPath string, fps, crf, speed, threads int,
 	}
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: 准备帧失败: %v\n", err)
+		logger.Error("准备帧失败: %v", err)
 		return
 	}
 
 	// 编码AVIF动画
 	err = encodeAvifAnimation(tempDir, outputPath, fps, crf, speed, threads, alpha, debugMode)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: 编码动画失败: %v\n", err)
+		logger.Error("编码动画失败: %v", err)
 		return
 	}
 
-	fmt.Printf("成功创建AVIF动画: %s\n", outputPath)
+	logger.Success("成功创建AVIF动画: %s", outputPath)
 
 	// 如果需要删除原始文件
 	if deleteOriginal && fileInfo.IsDir() {
 		// 如果输入是目录，则删除目录中的所有图像文件
 		entries, err := os.ReadDir(inputPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "警告: 无法读取目录 %s: %v\n", inputPath, err)
+			logger.Warning("无法读取目录 %s: %v", inputPath, err)
 			return
 		}
 
@@ -77,7 +102,7 @@ func CreateAnimation(inputPath, outputPath string, fps, crf, speed, threads int,
 				filePath := filepath.Join(inputPath, entry.Name())
 				err = os.Remove(filePath)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "警告: 无法删除文件 %s: %v\n", filePath, err)
+					logger.Warning("无法删除文件 %s: %v", filePath, err)
 				}
 			}
 		}
@@ -85,9 +110,12 @@ func CreateAnimation(inputPath, outputPath string, fps, crf, speed, threads int,
 		// 如果输入是单个文件，则删除该文件
 		err = os.Remove(inputPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "警告: 无法删除文件 %s: %v\n", inputPath, err)
+			logger.Warning("无法删除文件 %s: %v", inputPath, err)
 		}
 	}
+	
+	// 显示最终处理结果摘要
+	logger.ShowFinalSummary()
 }
 
 // 从目录准备帧
@@ -154,16 +182,20 @@ func prepareFramesFromDirectory(inputDir, tempDir string, width, height int, sca
 // 从动画文件准备帧
 func prepareFramesFromAnimation(inputFile, tempDir string, width, height int, scale float64, background string, debugMode bool) error {
 	// 使用FFmpeg提取帧
+	logger.Info("正在从动画文件提取帧...")
 	args := []string{
 		"-i", inputFile,
 		"-vsync", "0",
 		filepath.Join(tempDir, "frame_%04d.png"),
 	}
 
+	logger.Debug("执行FFmpeg命令: %v", args)
 	err := ffmpeg.ExecuteFFmpeg(args, debugMode)
 	if err != nil {
 		return fmt.Errorf("提取帧失败: %v", err)
 	}
+
+	logger.Info("帧提取完成")
 
 	// 如果需要调整大小或应用背景，则处理每个提取的帧
 	if width > 0 || height > 0 || scale != 1.0 || background != "white" {
@@ -246,6 +278,34 @@ func processFrame(inputPath, outputPath string, width, height int, background st
 	return ffmpeg.ExecuteFFmpeg(args, debugMode)
 }
 
+// countAnimationFiles 统计目录中可处理的动画文件数量
+func countAnimationFiles(dir string) int {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return 0
+	}
+
+	count := 0
+	for _, entry := range entries {
+		if !entry.IsDir() && isSupportedImageFileForAnimation(entry.Name()) {
+			count++
+		}
+	}
+	return count
+}
+
+// isSupportedImageFileForAnimation 检查是否为支持的图像文件（用于动画）
+func isSupportedImageFileForAnimation(filePath string) bool {
+	ext := strings.ToLower(filepath.Ext(filePath))
+	return ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp" || ext == ".tiff" || ext == ".tif" || ext == ".webp"
+}
+
+// isAnimationFile 检查文件是否为支持的动画文件
+func isAnimationFile(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	return ext == ".gif" || ext == ".webp" || ext == ".mp4" || ext == ".avi" || ext == ".mov" || ext == ".mkv"
+}
+
 // 编码AVIF动画
 func encodeAvifAnimation(framesDir, outputPath string, fps, crf, speed, threads int, alpha bool, debugMode bool) error {
 	// 构建FFmpeg参数
@@ -253,6 +313,8 @@ func encodeAvifAnimation(framesDir, outputPath string, fps, crf, speed, threads 
 	if alpha {
 		pixFmt = "yuva420p"
 	}
+
+	logger.Info("正在编码AVIF动画...")
 
 	// 构建FFmpeg命令
 	args := []string{
@@ -274,6 +336,13 @@ func encodeAvifAnimation(framesDir, outputPath string, fps, crf, speed, threads 
 		outputPath,
 	)
 
+	logger.Debug("执行FFmpeg命令: %v", args)
 	// 执行FFmpeg命令
-	return ffmpeg.ExecuteFFmpeg(args, debugMode)
+	err := ffmpeg.ExecuteFFmpeg(args, debugMode)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("AVIF动画编码完成")
+	return nil
 }

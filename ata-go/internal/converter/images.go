@@ -1,14 +1,15 @@
 package converter
 
 import (
-	"time"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/withoutcat/ata/internal/ffmpeg"
 	"github.com/withoutcat/ata/pkg/cli"
+	"github.com/withoutcat/ata/pkg/logger"
 )
 
 // 检查文件是否为支持的图像格式
@@ -20,6 +21,32 @@ func isSupportedImageFile(filePath string) bool {
 		}
 	}
 	return false
+}
+
+// countSupportedFiles 统计目录中支持的图像文件数量
+func countSupportedFiles(dirPath string, recursive bool) int {
+	count := 0
+	
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		return 0
+	}
+	
+	for _, entry := range entries {
+		filePath := filepath.Join(dirPath, entry.Name())
+		
+		if entry.IsDir() {
+			if recursive {
+				count += countSupportedFiles(filePath, recursive)
+			}
+		} else {
+			if isSupportedImageFile(filePath) {
+				count++
+			}
+		}
+	}
+	
+	return count
 }
 
 // 获取AVIF输出路径
@@ -44,10 +71,34 @@ func getOutputPath(inputPath string, force bool) (string, error) {
 
 // ConvertImages 将指定路径下的图像转换为AVIF格式
 func ConvertImages(path string, debugMode, deleteOriginal, recursive, force bool) {
+	// 初始化logger
+	logger.Init(debugMode)
+	logger.ResetCounter()
+	
 	// 获取文件信息
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: 无法访问路径 %s: %v\n", path, err)
+		logger.Error("无法访问路径 %s: %v", path, err)
+		return
+	}
+
+	// 统计可处理的文件数量
+	var totalFiles int
+	if fileInfo.IsDir() {
+		totalFiles = countSupportedFiles(path, recursive)
+	} else {
+		if isSupportedImageFile(path) {
+			totalFiles = 1
+		} else {
+			totalFiles = 0
+		}
+	}
+	
+	// 显示开始处理的摘要
+	logger.ShowStartSummary(totalFiles)
+	
+	// 如果没有可处理的文件，直接返回
+	if totalFiles == 0 {
 		return
 	}
 
@@ -56,12 +107,11 @@ func ConvertImages(path string, debugMode, deleteOriginal, recursive, force bool
 		processDirectory(path, debugMode, deleteOriginal, recursive, force)
 	} else {
 		// 如果是文件，则直接处理该文件
-		if isSupportedImageFile(path) {
-			processFile(path, debugMode, deleteOriginal, force)
-		} else {
-			fmt.Fprintf(os.Stderr, "错误: 不支持的文件格式: %s\n", path)
-		}
+		processFile(path, debugMode, deleteOriginal, force)
 	}
+	
+	// 显示最终处理结果摘要
+	logger.ShowFinalSummary()
 }
 
 // 处理目录中的所有文件
@@ -95,13 +145,15 @@ func processDirectory(dirPath string, debugMode, deleteOriginal, recursive, forc
 func processFile(filePath string, debugMode, deleteOriginal, force bool) {
 	// 获取输出路径
 	outputPath, err := getOutputPath(filePath, force)
-if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: %v\n", err)
+	if err != nil {
+		logger.Error("%v", err)
 		return
 	}
 
-	fmt.Printf("转换: %s", outputPath)
-	//计时器开始
+	// 开始处理文件，显示序号和文件名
+	logger.ProcessStart(outputPath)
+	
+	// 计时器开始
 	processStartTime := time.Now()
 
 	// 构建FFmpeg参数
@@ -115,27 +167,31 @@ if err != nil {
 		outputPath,
 	}
 
+	// 调试信息
+	logger.Debug("执行FFmpeg命令: %v", args)
+
 	// 执行FFmpeg命令
 	err = ffmpeg.ExecuteFFmpeg(args, debugMode)
+	
+	// 计时器结束
+	processEndTime := time.Now()
+	processDuration := processEndTime.Sub(processStartTime)
+	
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: 转换失败 %s: %v\n", filePath, err)
+		logger.ProcessError(err, processDuration)
 		// 如果转换失败，删除可能部分生成的输出文件
 		os.Remove(outputPath)
 		return
 	}
-	// 计时器结束
-	processEndTime := time.Now()
-	// 计算转换时间
-	processDuration := processEndTime.Sub(processStartTime)
 
 	// 打印转换成功信息
-	fmt.Printf(" 成功 (耗时: %v)\n", processDuration)
+	logger.ProcessSuccess(processDuration)
 
 	// 如果需要删除原始文件
 	if deleteOriginal {
 		err = os.Remove(filePath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "警告: 无法删除原始文件 %s: %v\n", filePath, err)
+			logger.Warning("无法删除原始文件 %s: %v", filePath, err)
 		}
 	}
 }
