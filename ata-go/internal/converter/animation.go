@@ -174,6 +174,8 @@ func prepareFramesFromDirectory(inputDir, tempDir string, width, height int, sca
 		if err != nil {
 			return fmt.Errorf("处理帧 %s 失败: %v", imagePath, err)
 		}
+		// 更新进度条
+		logger.ShowProgress()
 	}
 
 	return nil
@@ -275,7 +277,16 @@ func processFrame(inputPath, outputPath string, width, height int, background st
 	}
 
 	// 执行FFmpeg命令
-	return ffmpeg.ExecuteFFmpeg(args, debugMode)
+	err := ffmpeg.ExecuteFFmpeg(args, debugMode)
+	if err != nil {
+		return err
+	}
+	
+	// 帧处理成功，更新计数器
+	// 使用 ProcessSuccess 方法来更新计数器
+	logger.ProcessSuccess(0)
+	
+	return nil
 }
 
 // countAnimationFiles 统计目录中可处理的动画文件数量
