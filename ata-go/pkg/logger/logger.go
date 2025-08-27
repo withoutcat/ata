@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -62,6 +63,10 @@ type Logger struct {
 	totalFiles int
 	successCount int
 	failureCount int
+	showProgress bool
+	lastProgressLen int
+	usePowerShellProgress bool
+	progressActivityId int
 }
 
 // 全局logger实例
@@ -78,6 +83,10 @@ func Init(debugMode bool) {
 		totalFiles: 0,
 		successCount: 0,
 		failureCount: 0,
+		showProgress: true,
+		lastProgressLen: 0,
+		usePowerShellProgress: false,
+		progressActivityId: 1,
 	}
 	
 	// 设置标准log包的输出格式
@@ -134,7 +143,15 @@ func ProcessSuccess(duration time.Duration) {
 	if globalLogger != nil {
 		globalLogger.successCount++
 	}
-	fmt.Printf(" %s成功%s (耗时: %.2f秒)\n", ColorGreen, ColorReset, duration.Seconds())
+	fmt.Printf(" %s成功%s (耗时: %.2f秒)", ColorGreen, ColorReset, duration.Seconds())
+	
+	// 如果有多个文件，显示进度条；否则直接换行
+	if globalLogger != nil && globalLogger.totalFiles > 1 {
+		fmt.Print("\n")
+		ShowProgress() // 每次文件处理完成都更新进度条
+	} else {
+		fmt.Print("\n")
+	}
 }
 
 // ProcessError 处理失败
@@ -142,7 +159,15 @@ func ProcessError(err error, duration time.Duration) {
 	if globalLogger != nil {
 		globalLogger.failureCount++
 	}
-	fmt.Printf(" %s失败%s (耗时: %.2f秒) - %v\n", ColorRed, ColorReset, duration.Seconds(), err)
+	fmt.Printf(" %s失败%s (耗时: %.2f秒) - %v", ColorRed, ColorReset, duration.Seconds(), err)
+	
+	// 如果有多个文件，显示进度条；否则直接换行
+	if globalLogger != nil && globalLogger.totalFiles > 1 {
+		fmt.Print("\n")
+		ShowProgress() // 每次文件处理完成都更新进度条
+	} else {
+		fmt.Print("\n")
+	}
 }
 
 // GetFileCounter 获取当前文件计数器
@@ -159,6 +184,7 @@ func ResetCounter() {
 		globalLogger.fileCounter = 0
 		globalLogger.successCount = 0
 		globalLogger.failureCount = 0
+		globalLogger.lastProgressLen = 0
 	}
 }
 
@@ -177,6 +203,132 @@ func ShowStartSummary(total int) {
 		return
 	}
 	fmt.Printf("%s找到 %d 个文件，开始处理...%s\n", ColorCyan, total, ColorReset)
+	
+	// 如果有多个文件，显示初始进度条
+	if total > 1 {
+		// 如果使用PowerShell进度条，显示初始0%进度
+		if globalLogger != nil && globalLogger.usePowerShellProgress {
+			ShowProgress() // 显示0%进度
+		} else {
+			ShowProgress()
+		}
+	}
+}
+
+// ShowPowerShellProgress 使用PowerShell原生进度条
+func ShowPowerShellProgress() {
+	if globalLogger == nil || !globalLogger.showProgress || globalLogger.totalFiles <= 1 {
+		return
+	}
+	
+	processed := globalLogger.successCount + globalLogger.failureCount
+	percentage := int(float64(processed) / float64(globalLogger.totalFiles) * 100)
+	
+	// 构建PowerShell Write-Progress命令，使用简单的参数传递
+	activity := "FileConversion"
+	status := fmt.Sprintf("Processing_%d_of_%d", processed, globalLogger.totalFiles)
+	
+	// 构建PowerShell命令，避免复杂的字符串转义
+	psCmd := fmt.Sprintf("Write-Progress -Id %d -Activity %s -Status %s -PercentComplete %d",
+		globalLogger.progressActivityId, activity, status, percentage)
+	
+	// 执行PowerShell命令
+	cmd := exec.Command("powershell", "-NoProfile", "-Command", psCmd)
+	cmd.Run() // 忽略错误，因为这只是进度显示
+}
+
+// ClearPowerShellProgress 清除PowerShell进度条
+func ClearPowerShellProgress() {
+	if globalLogger == nil {
+		return
+	}
+	
+	// 使用-Completed参数清除进度条
+	psCmd := fmt.Sprintf(`Write-Progress -Id %d -Completed`, globalLogger.progressActivityId)
+	cmd := exec.Command("powershell", "-NoProfile", "-Command", psCmd)
+	cmd.Run() // 忽略错误
+}
+
+// ShowProgress 显示动态进度条
+func ShowProgress() {
+	if globalLogger == nil || !globalLogger.showProgress || globalLogger.totalFiles <= 1 {
+		return
+	}
+	
+	// 如果在Windows上且启用了PowerShell进度条，使用PowerShell进度条
+	if globalLogger.usePowerShellProgress {
+		ShowPowerShellProgress()
+		return
+	}
+	
+	processed := globalLogger.successCount + globalLogger.failureCount
+	percentage := float64(processed) / float64(globalLogger.totalFiles) * 100
+	
+	// 进度条长度
+	barWidth := 25
+	filledWidth := int(float64(barWidth) * float64(processed) / float64(globalLogger.totalFiles))
+	
+	// 使用Unicode字符构建更美观的进度条
+	// █ (U+2588) 实心方块 - 已完成部分
+	// ░ (U+2591) 浅色方块 - 未完成部分
+	// 这些字符在支持连字的字体中会无缝连接
+	var bar string
+	for i := 0; i < barWidth; i++ {
+		if i < filledWidth {
+			bar += "█"
+		} else {
+			bar += "░"
+		}
+	}
+	
+	// 构建进度信息，使用颜色让进度条更醒目
+	progressText := fmt.Sprintf("\r%s进度: %s%s%s %.1f%% (%d/%d)%s", 
+		ColorCyan, ColorGreen, bar, ColorCyan, percentage, processed, globalLogger.totalFiles, ColorReset)
+	
+	// 清除之前的进度条（如果更短）
+	if len(progressText) < globalLogger.lastProgressLen {
+		// 用空格填充到之前的长度
+		for i := len(progressText); i < globalLogger.lastProgressLen; i++ {
+			progressText += " "
+		}
+	}
+	
+	fmt.Print(progressText)
+	globalLogger.lastProgressLen = len(progressText)
+}
+
+// ClearProgress 清除进度条
+func ClearProgress() {
+	if globalLogger == nil {
+		return
+	}
+	
+	// 如果在Windows上且启用了PowerShell进度条，清除PowerShell进度条
+	if globalLogger.usePowerShellProgress {
+		ClearPowerShellProgress()
+		return
+	}
+	
+	// 清除基于print的进度条
+	if globalLogger.lastProgressLen == 0 {
+		return
+	}
+	
+	// 用空格覆盖进度条
+	clearText := "\r"
+	for i := 0; i < globalLogger.lastProgressLen; i++ {
+		clearText += " "
+	}
+	clearText += "\r"
+	fmt.Print(clearText)
+	globalLogger.lastProgressLen = 0
+}
+
+// SetProgressEnabled 设置是否显示进度条
+func SetProgressEnabled(enabled bool) {
+	if globalLogger != nil {
+		globalLogger.showProgress = enabled
+	}
 }
 
 // ShowFinalSummary 显示最终处理结果摘要
@@ -187,6 +339,25 @@ func ShowFinalSummary() {
 	
 	if globalLogger.totalFiles == 0 {
 		return
+	}
+	
+	// 如果有多个文件，先显示100%完成的进度条
+	if globalLogger.totalFiles > 1 {
+		// 构建100%完成的进度条
+		barWidth := 25
+		var bar string
+		for i := 0; i < barWidth; i++ {
+			bar += "█"
+		}
+		progressText := fmt.Sprintf("\r%s进度: %s%s%s 100.0%% (%d/%d)%s", 
+			ColorCyan, ColorGreen, bar, ColorCyan, globalLogger.totalFiles, globalLogger.totalFiles, ColorReset)
+		fmt.Print(progressText)
+		
+		// 等待一小段时间让用户看到100%完成
+		time.Sleep(500 * time.Millisecond)
+		
+		// 清除进度条
+		ClearProgress()
 	}
 	
 	fmt.Printf("\n%s处理完成！%s\n", ColorCyan, ColorReset)
