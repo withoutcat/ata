@@ -2,19 +2,21 @@
 
 ## 项目重构说明
 
-本项目是对原PowerShell版本ATA工具的Go语言重构版本，提供了命令行和GUI两种使用方式，功能包括：
+本项目是对原PowerShell版本ATA工具的Go语言重构版本，现在是一个独立的软件包，功能包括：
 
 - 批量将图像转换为AVIF格式
 - 创建AVIF动画
 - 制作幻灯片
+- 交互式安装程序（自动安装FFmpeg依赖和配置环境变量）
 
-## 目录结构变更
+## 项目特性
 
-重构后的项目结构做了以下调整：
+重构后的项目具有以下特性：
 
-1. **FFmpeg位置变更**：将FFmpeg从原来的`module/ffmpeg-n7.1-latest-win64-gpl-7.1`目录移动到了`ata-go/ffmpeg`目录下，使项目结构更加清晰。
-
-2. **PowerShell脚本**：原有的PowerShell脚本(`*.ps1`文件)仅作为重构参考，不再参与实际代码运行。新版本完全使用Go语言实现所有功能。
+1. **独立软件包**：用户只需下载单个可执行文件，无需克隆整个仓库
+2. **交互式安装**：首次运行时提供友好的安装界面，自动处理依赖和环境配置
+3. **跨平台支持**：提供Windows、Linux、macOS三个平台的发布版本
+4. **自动依赖管理**：自动检测和安装FFmpeg依赖
 
 ## 环境要求
 
@@ -56,16 +58,22 @@ ffmpeg -version
 
 ## 安装与使用
 
-### 构建和安装
+### 快速开始
 
-1. 构建项目：
-   ```
-   build.bat
+#### 用户使用
+1. 从 [Releases](https://github.com/withoutcat/ata/releases) 下载对应平台的可执行文件
+2. 运行可执行文件，选择 "1. Install" 进行安装
+3. 重启终端后即可使用 `ata` 命令
+
+#### 开发者构建
+1. 构建发布版本：
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File ./build-release.ps1
    ```
 
-2. 安装到系统：
-   ```
-   install.bat
+2. 测试构建结果：
+   ```bash
+   ./release/ata-windows.exe help
    ```
 
 ### 使用方法
@@ -86,20 +94,28 @@ ata ppt [输入路径] [输出路径] [参数同ani命令]
 ata help
 ```
 
-#### GUI模式
+#### 交互式安装模式
 
-直接运行`ata`命令（不带参数）即可启动GUI界面，包含三个功能选项卡：
+直接运行`ata`命令（不带参数）即可启动交互式安装界面，提供三个选项：
 
-1. 批量转换 - 将图像批量转换为AVIF格式
-2. 动画合成 - 创建AVIF动画
-3. 幻灯片 - 制作AVIF幻灯片
+1. **Install** - 安装FFmpeg依赖并配置环境变量
+2. **Help** - 显示详细的使用帮助信息
+3. **Exit** - 退出程序
 
 ## 开发说明
 
-项目使用Go语言开发，GUI部分使用GoVCL框架。主要包结构：
+项目使用Go语言开发，采用模块化设计。主要包结构：
 
 - `cmd/ata`: 主程序入口
 - `internal/ffmpeg`: FFmpeg调用相关功能
 - `internal/converter`: 图像转换和动画创建核心功能
+- `internal/animation`: 动画处理逻辑
+- `internal/utils`: 工具函数
 - `pkg/cli`: 命令行相关功能
-- `pkg/gui`: GUI相关功能
+- `pkg/installer`: 交互式安装程序
+- `pkg/logger`: 日志系统
+
+### 构建说明
+- 使用 `build-release.ps1` 脚本可构建Windows、Linux、macOS三个平台的发布版本
+- 构建产物位于 `release/` 目录下
+- 详细构建说明请参考 `RELEASE_README.md`

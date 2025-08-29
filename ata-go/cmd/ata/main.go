@@ -9,38 +9,29 @@ import (
 	"github.com/withoutcat/ata/internal/converter"
 	"github.com/withoutcat/ata/internal/ffmpeg"
 	"github.com/withoutcat/ata/pkg/cli"
+	"github.com/withoutcat/ata/pkg/installer"
 )
 
 func main() {
-	// 检查FFmpeg是否可用
-	ffmpegPath, err := ffmpeg.FindFFmpegPath()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "错误: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 设置FFmpeg路径
-	ffmpeg.SetFFmpegPath(ffmpegPath)
-
 	// 检查是否有命令行参数
 	if len(os.Args) > 1 {
-		// 命令行模式
+		// 命令行模式 - 需要FFmpeg
+		ffmpegPath, err := ffmpeg.FindFFmpegPath()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "错误: %v\n", err)
+			fmt.Println("提示: 请先运行安装程序来安装FFmpeg依赖")
+			os.Exit(1)
+		}
+		// 设置FFmpeg路径
+		ffmpeg.SetFFmpegPath(ffmpegPath)
 		handleCommandLine()
 	} else {
-		// GUI模式
-		startGUI()
+		// 交互式安装模式
+		installer.ShowInteractiveMenu()
 	}
 }
 
-func startGUI() {
-	// 动态导入GUI包以避免在命令行模式下初始化GUI库
-	// 这里我们直接调用GUI包的StartGUI函数
-	// 注意：这种方法仍然会导致GUI库被初始化
-	// 更好的解决方案是将GUI功能分离到单独的可执行文件中
-	fmt.Println("GUI模式需要额外的依赖文件。")
-	fmt.Println("请使用命令行模式：")
-	cli.ShowHelp()
-}
+
 
 func handleCommandLine() {
 	// 定义子命令
