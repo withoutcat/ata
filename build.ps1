@@ -1,5 +1,6 @@
 # ATA Unified Build Script
 # Usage:
+#   ./build.ps1          # Development build (default)
 #   ./build.ps1 -dev     # Development build (no version increment)
 #   ./build.ps1 -release # Release build (increment version)
 
@@ -9,16 +10,15 @@ param(
 )
 
 # Validate parameters
-if (-not $dev -and -not $release) {
-    Write-Host "Usage: ./build.ps1 [-dev | -release]" -ForegroundColor Red
-    Write-Host "  -dev     Development build (no version increment)" -ForegroundColor Gray
-    Write-Host "  -release Release build (increment version)" -ForegroundColor Gray
-    exit 1
-}
-
 if ($dev -and $release) {
     Write-Host "Error: Cannot specify both -dev and -release" -ForegroundColor Red
     exit 1
+}
+
+# Default to development build if no parameters specified
+if (-not $dev -and -not $release) {
+    $dev = $true
+    Write-Host "No build type specified, defaulting to development build..." -ForegroundColor Yellow
 }
 
 # Version management
