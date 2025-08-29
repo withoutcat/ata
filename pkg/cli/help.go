@@ -11,7 +11,12 @@ var SupportedImageExtensions = []string{
 
 // ShowHelp 显示帮助信息
 func ShowHelp() {
-	fmt.Println("ATA - AVIF图像转换工具")
+	ShowHelpWithVersion("dev")
+}
+
+// ShowHelpWithVersion 显示带版本信息的帮助
+func ShowHelpWithVersion(version string) {
+	fmt.Printf("ATA - AVIF图像转换工具 v%s\n", version)
 	fmt.Println("用法:")
 	fmt.Println("  ata [选项] [路径]        - 将指定路径下的图像转换为AVIF格式")
 	fmt.Println("  ata convert [选项] [路径] - 将指定路径下的图像转换为AVIF格式")

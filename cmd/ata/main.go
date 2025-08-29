@@ -11,6 +11,9 @@ import (
 	"github.com/withoutcat/ata/pkg/cli"
 )
 
+// 版本信息，在构建时通过 -ldflags 注入
+var version = "dev"
+
 func main() {
 	// 检查FFmpeg依赖
 	ffmpegPath, err := ffmpeg.FindFFmpegPath()
@@ -27,7 +30,7 @@ func main() {
 		handleCommandLine()
 	} else {
 		// 没有参数时显示帮助
-		cli.ShowHelp()
+		cli.ShowHelpWithVersion(version)
 	}
 }
 
@@ -97,7 +100,7 @@ func handleCommandLine() {
 		convertCmd.Parse(os.Args[2:])
 		if convertCmd.NArg() < 1 {
 			fmt.Println("错误: 请指定输入路径")
-			cli.ShowHelp()
+			cli.ShowHelpWithVersion(version)
 			os.Exit(1)
 		}
 		path := convertCmd.Arg(0)
@@ -107,7 +110,7 @@ func handleCommandLine() {
 		aniCmd.Parse(os.Args[2:])
 		if aniCmd.NArg() < 1 {
 			fmt.Println("错误: 请指定输入路径")
-			cli.ShowHelp()
+			cli.ShowHelpWithVersion(version)
 			os.Exit(1)
 		}
 		path := aniCmd.Arg(0)
@@ -124,7 +127,7 @@ func handleCommandLine() {
 		pptCmd.Parse(os.Args[2:])
 		if pptCmd.NArg() < 1 {
 			fmt.Println("错误: 请指定输入路径")
-			cli.ShowHelp()
+			cli.ShowHelpWithVersion(version)
 			os.Exit(1)
 		}
 		path := pptCmd.Arg(0)
@@ -139,7 +142,10 @@ func handleCommandLine() {
 		converter.CreateAnimation(path, outputPath, pptFps, pptCrf, pptSpeed, pptThreads, pptAlpha, pptWidth, pptHeight, pptScale, pptBackground, pptDebugMode, pptDeleteOriginal, pptForce)
 
 	case "help", "-h", "--help":
-		cli.ShowHelp()
+		cli.ShowHelpWithVersion(version)
+
+	case "version", "-v", "--version":
+		fmt.Printf("ATA v%s\n", version)
 
 	default:
 		// 如果第一个参数不是子命令，则假定为路径，使用convert子命令
