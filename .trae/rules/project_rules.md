@@ -33,7 +33,6 @@
 ```bash
 git add .
 git commit -m "[生成的commit message]"
-git push origin ${当前的分支}
 ```
 
 ## 开发规范
