@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/withoutcat/ata/internal/ffmpeg"
-	"github.com/withoutcat/ata/pkg/logger"
+	"github.com/withoutcat/ata/internal/logger"
 )
 
 // CreateAnimation 从图像序列创建AVIF动画

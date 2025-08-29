@@ -8,7 +8,7 @@ import (
 
 	"github.com/withoutcat/ata/internal/converter"
 	"github.com/withoutcat/ata/internal/ffmpeg"
-	"github.com/withoutcat/ata/pkg/cli"
+	"github.com/withoutcat/ata/internal/cli"
 )
 
 // 版本信息，在构建时通过 -ldflags 注入

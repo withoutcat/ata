@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/withoutcat/ata/internal/ffmpeg"
-	"github.com/withoutcat/ata/pkg/cli"
-	"github.com/withoutcat/ata/pkg/logger"
+	"github.com/withoutcat/ata/internal/cli"
+	"github.com/withoutcat/ata/internal/logger"
 )
 
 // 检查文件是否为支持的图像格式
