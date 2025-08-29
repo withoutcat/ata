@@ -74,21 +74,30 @@ Write-Host ""
 Write-Host "Build version: $buildVersion" -ForegroundColor Cyan
 Write-Host ""
 
-# Clean old build files
-if (Test-Path "ata.exe") { Remove-Item "ata.exe" }
+# Create and clean build directories
 if ($dev) {
-    if (Test-Path "ata-installer-dev.exe") { Remove-Item "ata-installer-dev.exe" }
+    $buildDir = Join-Path "build" "dev"
 } else {
-    if (!(Test-Path "release")) { New-Item -ItemType Directory -Name "release" }
-    Get-ChildItem "release" | Remove-Item -Force
+    $buildDir = Join-Path "build" "release"
 }
+
+if (!(Test-Path $buildDir)) { 
+    New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+}
+Get-ChildItem $buildDir -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse
+
+# Clean old build files from root directory (legacy cleanup)
+if (Test-Path "ata.exe") { Remove-Item "ata.exe" }
+if (Test-Path "ata-installer-dev.exe") { Remove-Item "ata-installer-dev.exe" }
+if (Test-Path "release") { Remove-Item "release" -Recurse -Force }
 
 # Build function
 function Build-Platform {
     param(
         [string]$Platform,
         [string]$Version,
-        [bool]$IsDev
+        [bool]$IsDev,
+        [string]$BuildDir
     )
     
     $platformName = $Platform
@@ -121,16 +130,12 @@ function Build-Platform {
         $installerName = "ata-installer-$platformName-$Version$exeSuffix"
     }
     
-    go build -ldflags $ldflags -o $installerName "./cmd/setup"
+    $installerPath = Join-Path $BuildDir $installerName
+    go build -ldflags $ldflags -o $installerPath "./cmd/setup"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "$platformName installer build failed!" -ForegroundColor Red
         Read-Host "Press Enter to exit"
         exit 1
-    }
-    
-    # Move to release directory for release builds
-    if (-not $IsDev) {
-        Move-Item $installerName "release/"
     }
     
     # Clean temporary files
@@ -139,7 +144,7 @@ function Build-Platform {
 
 # Build for all required platforms
 foreach ($platform in $platforms) {
-    Build-Platform -Platform $platform -Version $buildVersion -IsDev $dev
+    Build-Platform -Platform $platform -Version $buildVersion -IsDev $dev -BuildDir $buildDir
 }
 
 # Reset environment variables
@@ -150,15 +155,21 @@ Write-Host ""
 Write-Host "Build completed successfully!" -ForegroundColor Green
 
 if ($dev) {
-    Write-Host "Development installer: ata-installer-dev.exe" -ForegroundColor Cyan
+    Write-Host "Development build directory: $buildDir" -ForegroundColor Cyan
+    $devInstallerPath = Join-Path $buildDir "ata-installer-dev.exe"
+    Write-Host "Development installer: $devInstallerPath" -ForegroundColor Cyan
     Write-Host "Version: $buildVersion" -ForegroundColor White
 } else {
+    Write-Host "Release build directory: $buildDir" -ForegroundColor Cyan
     Write-Host "Release files:" -ForegroundColor Cyan
-    Get-ChildItem "release" | ForEach-Object { Write-Host "  $($_.Name)" -ForegroundColor White }
+    Get-ChildItem $buildDir | ForEach-Object { Write-Host "  $($_.Name)" -ForegroundColor White }
     Write-Host ""
     Write-Host "Installation:" -ForegroundColor Yellow
-    Write-Host "  Windows: run ata-installer-windows-$buildVersion.exe" -ForegroundColor White
-    Write-Host "  Linux:   chmod +x ata-installer-linux-$buildVersion && ./ata-installer-linux-$buildVersion" -ForegroundColor White
-    Write-Host "  macOS:   chmod +x ata-installer-macos-$buildVersion && ./ata-installer-macos-$buildVersion" -ForegroundColor White
+    $winInstaller = Join-Path $buildDir "ata-installer-windows-$buildVersion.exe"
+    $linuxInstaller = Join-Path $buildDir "ata-installer-linux-$buildVersion"
+    $macInstaller = Join-Path $buildDir "ata-installer-macos-$buildVersion"
+    Write-Host "  Windows: run $winInstaller" -ForegroundColor White
+    Write-Host "  Linux:   chmod +x $linuxInstaller && ./$linuxInstaller" -ForegroundColor White
+    Write-Host "  macOS:   chmod +x $macInstaller && ./$macInstaller" -ForegroundColor White
 }
 Write-Host ""

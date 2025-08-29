@@ -4,7 +4,7 @@ ata-installer-dev.exe
 ata-installer-windows.exe
 ata-installer-linux
 ata-installer-macos
-release/
+build/
 
 # Go build cache
 *.exe~
