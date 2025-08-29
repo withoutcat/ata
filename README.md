@@ -226,7 +226,7 @@ ata/
     ├── pkg/
     │   ├── cli/            # 命令行界面
     │   ├── gui/            # 图形界面（已移除）
-    │   ├── installer/      # 交互式安装程序
+    │   ├── setup/          # 安装程序启动器
     │   └── logger/         # 日志系统
     └── release/            # 发布版本文件
         ├── ata-windows.exe # Windows 可执行文件

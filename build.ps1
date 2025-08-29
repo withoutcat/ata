@@ -106,7 +106,7 @@ function Build-Platform {
     
     # Build main program first
     Write-Host "  Building main program..." -ForegroundColor Cyan
-    go build -ldflags $ldflags -o "cmd/installer/$mainExe" "./cmd/ata"
+    go build -ldflags $ldflags -o "cmd/setup/$mainExe" "./cmd/ata"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "$platformName main program build failed!" -ForegroundColor Red
         Read-Host "Press Enter to exit"
@@ -121,7 +121,7 @@ function Build-Platform {
         $installerName = "ata-installer-$platformName-$Version$exeSuffix"
     }
     
-    go build -ldflags $ldflags -o $installerName "./cmd/installer"
+    go build -ldflags $ldflags -o $installerName "./cmd/setup"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "$platformName installer build failed!" -ForegroundColor Red
         Read-Host "Press Enter to exit"
@@ -134,7 +134,7 @@ function Build-Platform {
     }
     
     # Clean temporary files
-    if (Test-Path "cmd/installer/$mainExe") { Remove-Item "cmd/installer/$mainExe" }
+    if (Test-Path "cmd/setup/$mainExe") { Remove-Item "cmd/setup/$mainExe" }
 }
 
 # Build for all required platforms
