@@ -8,29 +8,39 @@ ATA是一个强大的AVIF图像转换工具，支持批量转换图像为AVIF格
 
 ### 1. 下载
 
-根据您的操作系统下载对应的可执行文件：
-- **Windows**: `ata-windows.exe`
-- **Linux**: `ata-linux`
-- **macOS**: `ata-macos`
+从 [Releases](https://github.com/withoutcat/ata/releases) 页面下载适合您操作系统的安装程序：
+- **Windows**: `ata-installer-windows.exe`
+- **Linux**: `ata-installer-linux`
+- **macOS**: `ata-installer-macos`
 
 ### 2. 安装
 
-#### Windows用户
-1. 下载 `ata-windows.exe`
-2. 双击运行，或在命令行中运行
-3. 选择 "1. Install" 进行安装
-4. 安装程序会自动：
-   - 检查并安装FFmpeg依赖（需要Chocolatey）
-   - 将ATA添加到系统PATH环境变量
+#### Windows
+1. 双击运行 `ata-installer-windows.exe`
+2. 选择 "1. Install" 进行安装
+3. 安装程序会：
+   - 自动检查并安装 FFmpeg 依赖
+   - 将 `ata.exe` 复制到用户 bin 目录（如 `C:\Users\用户名\bin\ata.exe`）
+   - 将用户 bin 目录添加到系统 PATH 环境变量
+4. 完成后重新打开终端即可使用 `ata` 命令
 
-#### Linux/macOS用户
-1. 下载对应的可执行文件
-2. 添加执行权限：`chmod +x ata-linux` 或 `chmod +x ata-macos`
-3. 运行安装程序：`./ata-linux` 或 `./ata-macos`
-4. 选择 "1. Install" 进行安装
-5. 安装程序会自动：
-   - 检查并安装FFmpeg依赖
-   - 将ATA添加到PATH环境变量
+#### Linux/macOS
+1. 给安装程序添加执行权限：
+   ```bash
+   chmod +x ata-installer-linux    # Linux
+   chmod +x ata-installer-macos    # macOS
+   ```
+2. 运行安装程序：
+   ```bash
+   ./ata-installer-linux     # Linux
+   ./ata-installer-macos     # macOS
+   ```
+3. 选择 "1. Install" 进行安装
+4. 安装程序会：
+   - 自动检查并安装 FFmpeg 依赖
+   - 将 `ata` 复制到用户 bin 目录（如 `~/bin/ata`）
+   - 将用户 bin 目录添加到 PATH 环境变量
+5. 完成后重新打开终端即可使用 `ata` 命令
 
 ### 3. 使用
 
@@ -167,12 +177,15 @@ rm -rf release
 mkdir -p release
 
 # 构建Windows版本
-GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o release/ata-windows.exe ./cmd/ata
+GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o release/ata-installer-windows.exe ./cmd/installer
+GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o release/ata.exe ./cmd/ata
 
 # 构建Linux版本
+GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o release/ata-installer-linux ./cmd/installer
 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o release/ata-linux ./cmd/ata
 
 # 构建macOS版本
+GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o release/ata-installer-macos ./cmd/installer
 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o release/ata-macos ./cmd/ata
 
 echo "✓ 所有平台构建完成！"
@@ -181,12 +194,12 @@ ls -la release/
 
 ### 构建说明
 - 构建脚本会自动创建 `release/` 目录
-- 生成三个平台的可执行文件：
-  - `ata-windows.exe` (Windows)
-  - `ata-linux` (Linux)
-  - `ata-macos` (macOS)
+- 生成六个文件（每个平台两个）：
+  - **Windows**: `ata-installer-windows.exe` (安装程序) + `ata.exe` (主程序)
+  - **Linux**: `ata-installer-linux` (安装程序) + `ata-linux` (主程序)
+  - **macOS**: `ata-installer-macos` (安装程序) + `ata-macos` (主程序)
 - 使用 `-ldflags "-s -w"` 参数减小文件体积
-- 构建完成后可直接分发 `release/` 目录中的文件
+- 用户只需下载并运行对应平台的安装程序即可
 
 ### 验证构建
 ```bash

@@ -8,15 +8,17 @@
 - 创建AVIF动画
 - 制作幻灯片
 - 交互式安装程序（自动安装FFmpeg依赖和配置环境变量）
+- 嵌入式程序分发（单个安装文件包含完整程序）
 
 ## 项目特性
 
 重构后的项目具有以下特性：
 
-1. **独立软件包**：用户只需下载单个可执行文件，无需克隆整个仓库
-2. **交互式安装**：首次运行时提供友好的安装界面，自动处理依赖和环境配置
-3. **跨平台支持**：提供Windows、Linux、macOS三个平台的发布版本
-4. **自动依赖管理**：自动检测和安装FFmpeg依赖
+1. **独立软件包**：用户只需下载单个安装文件，无需克隆整个仓库
+2. **嵌入式分发**：安装程序内嵌完整的ATA程序，无需额外下载
+3. **交互式安装**：提供友好的安装界面，自动处理依赖和环境配置
+4. **跨平台支持**：提供Windows、Linux、macOS三个平台的发布版本
+5. **自动依赖管理**：自动检测和安装FFmpeg依赖
 
 ## 环境要求
 
@@ -61,9 +63,16 @@ ffmpeg -version
 ### 快速开始
 
 #### 用户使用
-1. 从 [Releases](https://github.com/withoutcat/ata/releases) 下载对应平台的可执行文件
-2. 运行可执行文件，选择 "1. Install" 进行安装
-3. 重启终端后即可使用 `ata` 命令
+1. 从 [Releases](https://github.com/withoutcat/ata/releases) 下载对应平台的安装文件：
+   - Windows: `ata-installer-windows.exe`
+   - Linux: `ata-installer-linux`
+   - macOS: `ata-installer-macos`
+2. 运行安装文件，选择 "1. Install" 进行安装
+3. 安装程序会自动：
+   - 提取并安装ATA程序到用户bin目录
+   - 设置PATH环境变量
+   - 检查并安装FFmpeg依赖
+4. 重启终端后即可使用 `ata` 命令
 
 #### 开发者构建
 1. 构建发布版本：
@@ -71,9 +80,15 @@ ffmpeg -version
    powershell -ExecutionPolicy Bypass -File ./build-release.ps1
    ```
 
-2. 测试构建结果：
+2. 构建过程说明：
+   - 脚本会为每个平台先构建主程序
+   - 然后将主程序嵌入到安装程序中
+   - 最终生成包含嵌入程序的单一安装文件
+
+3. 测试构建结果：
    ```bash
-   ./release/ata-windows.exe help
+   # 运行安装程序测试
+   ./release/ata-installer-windows.exe
    ```
 
 ### 使用方法
