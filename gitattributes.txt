@@ -1,3 +1,0 @@
-module/ffmpeg-n7.1-latest-win64-gpl-7.1/bin/ffmpeg.exe filter=lfs diff=lfs merge=lfs -text
-module/ffmpeg-n7.1-latest-win64-gpl-7.1/bin/ffplay.exe filter=lfs diff=lfs merge=lfs -text
-module/ffmpeg-n7.1-latest-win64-gpl-7.1/bin/ffprobe.exe filter=lfs diff=lfs merge=lfs -text
