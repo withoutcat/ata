@@ -34,20 +34,13 @@ func FindFFmpegPath() (string, error) {
 }
 
 // ExecuteFFmpeg 执行FFmpeg命令
-func ExecuteFFmpeg(args []string, debugMode bool) error {
+func ExecuteFFmpeg(args []string) error {
 	if ffmpegPath == "" {
 		return errors.New("FFmpeg路径未设置")
 	}
 
 	// 构建完整命令
 	cmd := exec.Command(ffmpegPath, args...)
-
-	// 如果是调试模式，将输出重定向到标准输出和标准错误
-	if debugMode {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		fmt.Println("执行命令:", ffmpegPath, strings.Join(args, " "))
-	}
 
 	// 执行命令
 	err := cmd.Start()

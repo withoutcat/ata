@@ -57,7 +57,6 @@ func initColors() {
 
 // Logger 结构体
 type Logger struct {
-	debugMode bool
 	fileCounter int
 	totalFiles int
 	successCount int
@@ -70,12 +69,11 @@ type Logger struct {
 var globalLogger *Logger
 
 // Init 初始化logger
-func Init(debugMode bool) {
+func Init() {
 	// 初始化颜色支持
 	initColors()
 	
 	globalLogger = &Logger{
-		debugMode: debugMode,
 		fileCounter: 0,
 		totalFiles: 0,
 		successCount: 0,
@@ -86,14 +84,6 @@ func Init(debugMode bool) {
 	
 	// 设置标准log包的输出格式
 	log.SetFlags(0) // 不显示时间戳，我们自己控制格式
-}
-
-// Debug 输出调试信息（仅在调试模式下显示）
-func Debug(format string, args ...interface{}) {
-	if globalLogger != nil && globalLogger.debugMode {
-		msg := fmt.Sprintf(format, args...)
-		fmt.Printf("%s[DEBUG]%s %s\n", ColorGray, ColorReset, msg)
-	}
 }
 
 // Info 输出普通信息

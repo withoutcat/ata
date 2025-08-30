@@ -70,9 +70,9 @@ func getOutputPath(inputPath string, force bool) (string, error) {
 }
 
 // ConvertImages 将指定路径下的图像转换为AVIF格式
-func ConvertImages(path string, debugMode, deleteOriginal, recursive, force bool) {
+func ConvertImages(path string, deleteOriginal, recursive, force bool) {
 	// 初始化logger
-	logger.Init(debugMode)
+	logger.Init()
 	logger.ResetCounter()
 	
 	// 获取文件信息
@@ -104,10 +104,10 @@ func ConvertImages(path string, debugMode, deleteOriginal, recursive, force bool
 
 	// 如果是目录，则处理目录中的所有文件
 	if fileInfo.IsDir() {
-		processDirectory(path, debugMode, deleteOriginal, recursive, force)
+		processDirectory(path, deleteOriginal, recursive, force)
 	} else {
 		// 如果是文件，则直接处理该文件
-		processFile(path, debugMode, deleteOriginal, force)
+		processFile(path, deleteOriginal, force)
 	}
 	
 	// 显示最终处理结果摘要
@@ -115,7 +115,7 @@ func ConvertImages(path string, debugMode, deleteOriginal, recursive, force bool
 }
 
 // 处理目录中的所有文件
-func processDirectory(dirPath string, debugMode, deleteOriginal, recursive, force bool) {
+func processDirectory(dirPath string, deleteOriginal, recursive, force bool) {
 	// 读取目录内容
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
@@ -130,19 +130,19 @@ func processDirectory(dirPath string, debugMode, deleteOriginal, recursive, forc
 		if entry.IsDir() {
 			// 如果是目录且启用了递归，则递归处理
 			if recursive {
-				processDirectory(path, debugMode, deleteOriginal, recursive, force)
+				processDirectory(path, deleteOriginal, recursive, force)
 			}
 		} else {
 			// 如果是文件，则检查是否为支持的图像格式
 			if isSupportedImageFile(path) {
-				processFile(path, debugMode, deleteOriginal, force)
+				processFile(path, deleteOriginal, force)
 			}
 		}
 	}
 }
 
 // 处理单个文件
-func processFile(filePath string, debugMode, deleteOriginal, force bool) {
+func processFile(filePath string, deleteOriginal, force bool) {
 	// 获取输出路径
 	outputPath, err := getOutputPath(filePath, force)
 	if err != nil {
@@ -167,11 +167,8 @@ func processFile(filePath string, debugMode, deleteOriginal, force bool) {
 		outputPath,
 	}
 
-	// 调试信息
-	logger.Debug("执行FFmpeg命令: %v", args)
-
 	// 执行FFmpeg命令
-	err = ffmpeg.ExecuteFFmpeg(args, debugMode)
+	err = ffmpeg.ExecuteFFmpeg(args)
 	
 	// 计时器结束
 	processEndTime := time.Now()
