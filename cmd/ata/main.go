@@ -89,7 +89,7 @@ func handleCommandLine() {
 	pptCmd.IntVar(&pptWidth, "width", 0, "输出宽度")
 	pptCmd.IntVar(&pptHeight, "height", 0, "输出高度")
 	pptCmd.Float64Var(&pptScale, "scale", 1.0, "缩放比例")
-	pptCmd.StringVar(&pptBackground, "bg", "white", "背景颜色")
+	pptCmd.StringVar(&pptBackground, "bg", "#0e0e0e", "背景颜色")
 
 	// 根据第一个参数选择子命令
 	switch os.Args[1] {
