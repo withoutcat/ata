@@ -11,6 +11,19 @@ import (
 	"github.com/withoutcat/ata/internal/logger"
 )
 
+// 支持的图像格式(other to avif)
+var supportedImageExtensionsForAnimation = map[string]bool{
+	".jpg":  true,
+	".jpeg": true,
+	".png":  true,
+	".webp": true,
+	".gif":  true,
+	".tiff": true,
+	".tif":  true,
+	".bmp":  true,
+	".avif": true,
+}
+
 // CreateAnimation 从图像序列创建AVIF动画
 func CreateAnimation(inputPath, outputPath string, fps, crf, speed, threads int, alpha bool, width, height int, scale float64, background string, deleteOriginal, force bool) {
 	// 初始化logger
@@ -129,7 +142,7 @@ func prepareFramesFromDirectory(inputDir, tempDir string, width, height int, sca
 	// 过滤出支持的图像文件
 	var imageFiles []string
 	for _, entry := range entries {
-		if !entry.IsDir() && isSupportedImageFile(entry.Name()) {
+		if !entry.IsDir() && isSupportedImageFileForAnimation(entry.Name()) {
 			imageFiles = append(imageFiles, filepath.Join(inputDir, entry.Name()))
 		}
 	}
@@ -283,7 +296,7 @@ func processFrame(inputPath, outputPath string, width, height int, background st
 	
 	// 帧处理成功，更新计数器
 	// 使用 ProcessSuccess 方法来更新计数器
-	logger.ProcessSuccess(0)
+	logger.ProcessSuccess(nil)
 	
 	return nil
 }
@@ -307,7 +320,8 @@ func countAnimationFiles(dir string) int {
 // isSupportedImageFileForAnimation 检查是否为支持的图像文件（用于动画）
 func isSupportedImageFileForAnimation(filePath string) bool {
 	ext := strings.ToLower(filepath.Ext(filePath))
-	return ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp" || ext == ".tiff" || ext == ".tif" || ext == ".webp"
+	_, ok := supportedImageExtensionsForAnimation[ext]
+	return ok
 }
 
 // isAnimationFile 检查文件是否为支持的动画文件

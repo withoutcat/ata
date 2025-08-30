@@ -2,12 +2,9 @@ package cli
 
 import (
 	"fmt"
-)
 
-// 支持的图像格式
-var SupportedImageExtensions = []string{
-	".jpg", ".jpeg", ".png", ".webp", ".gif", ".tiff", ".tif", ".bmp",
-}
+	"github.com/withoutcat/ata/internal/converter"
+)
 
 // ShowHelp 显示帮助信息
 func ShowHelp() {
@@ -50,9 +47,15 @@ func ShowHelpWithVersion(version string) {
 	fmt.Println("")
 	fmt.Println("支持的图像格式:")
 	fmt.Print("  ")
-	for i, ext := range SupportedImageExtensions {
+	// 将map的key转换为slice以便排序和遍历
+	exts := make([]string, 0, len(converter.SupportedImageExtensionsForConvertAvif))
+	for ext := range converter.SupportedImageExtensionsForConvertAvif {
+		exts = append(exts, ext)
+	}
+	
+	for i, ext := range exts {
 		fmt.Print(ext)
-		if i < len(SupportedImageExtensions)-1 {
+		if i < len(exts)-1 {
 			fmt.Print(", ")
 		}
 	}

@@ -8,19 +8,25 @@ import (
 	"time"
 
 	"github.com/withoutcat/ata/internal/ffmpeg"
-	"github.com/withoutcat/ata/internal/cli"
 	"github.com/withoutcat/ata/internal/logger"
 )
+
+// 支持的图像格式(other to avif)
+var SupportedImageExtensionsForConvertAvif = map[string]bool{
+	".jpg":  true,
+	".jpeg": true,
+	".png":  true,
+	".webp": true,
+	".tiff": true,
+	".tif":  true,
+	".bmp":  true,
+}
 
 // 检查文件是否为支持的图像格式
 func isSupportedImageFile(filePath string) bool {
 	ext := strings.ToLower(filepath.Ext(filePath))
-	for _, supportedExt := range cli.SupportedImageExtensions {
-		if ext == supportedExt {
-			return true
-		}
-	}
-	return false
+	_, ok := SupportedImageExtensionsForConvertAvif[ext]
+	return ok
 }
 
 // countSupportedFiles 统计目录中支持的图像文件数量
@@ -182,7 +188,7 @@ func processFile(filePath string, deleteOriginal, force bool) {
 	}
 
 	// 打印转换成功信息
-	logger.ProcessSuccess(processDuration)
+	logger.ProcessSuccess(nil)
 
 	// 如果需要删除原始文件
 	if deleteOriginal {
