@@ -2,16 +2,18 @@ package cli
 
 import (
 	"fmt"
-)
 
-// 支持的图像格式
-var SupportedImageExtensions = []string{
-	".jpg", ".jpeg", ".png", ".webp", ".gif", ".tiff", ".tif", ".bmp",
-}
+	"github.com/withoutcat/ata/internal/converter"
+)
 
 // ShowHelp 显示帮助信息
 func ShowHelp() {
-	fmt.Println("ATA - AVIF图像转换工具")
+	ShowHelpWithVersion("dev")
+}
+
+// ShowHelpWithVersion 显示带版本信息的帮助
+func ShowHelpWithVersion(version string) {
+	fmt.Printf("ATA - AVIF图像转换工具 v%s\n", version)
 	fmt.Println("用法:")
 	fmt.Println("  ata [选项] [路径]        - 将指定路径下的图像转换为AVIF格式")
 	fmt.Println("  ata convert [选项] [路径] - 将指定路径下的图像转换为AVIF格式")
@@ -22,7 +24,6 @@ func ShowHelp() {
 	fmt.Println("注意: 选项必须在路径参数之前指定")
 	fmt.Println("")
 	fmt.Println("选项:")
-	fmt.Println("  -d        启用调试模式")
 	fmt.Println("  -r        删除原始文件")
 	fmt.Println("  -f        强制覆盖已存在的文件")
 	fmt.Println("  -s        递归处理子目录")
@@ -39,16 +40,22 @@ func ShowHelp() {
 	fmt.Println("  -bg COLOR 设置背景颜色 (默认: white)")
 	fmt.Println("")
 	fmt.Println("示例:")
-	fmt.Println("  ata -s -d ./images       - 递归转换images目录下的所有图像，启用调试模式")
-	fmt.Println("  ata convert -f -d ./photos - 强制转换photos目录下的图像，启用调试模式")
+	fmt.Println("  ata -s ./images       - 递归转换images目录下的所有图像")
+	fmt.Println("  ata convert -f ./photos - 强制转换photos目录下的图像")
 	fmt.Println("  ata ani -fps 24 -crf 20 ./frames output.avif - 从frames目录创建24fps的高质量动画")
 	fmt.Println("  ata ppt -fps 1 ./slides presentation.avif - 从slides目录创建幻灯片动画")
 	fmt.Println("")
 	fmt.Println("支持的图像格式:")
 	fmt.Print("  ")
-	for i, ext := range SupportedImageExtensions {
+	// 将map的key转换为slice以便排序和遍历
+	exts := make([]string, 0, len(converter.SupportedImageExtensionsForConvertAvif))
+	for ext := range converter.SupportedImageExtensionsForConvertAvif {
+		exts = append(exts, ext)
+	}
+	
+	for i, ext := range exts {
 		fmt.Print(ext)
-		if i < len(SupportedImageExtensions)-1 {
+		if i < len(exts)-1 {
 			fmt.Print(", ")
 		}
 	}

@@ -57,7 +57,6 @@ func initColors() {
 
 // Logger 结构体
 type Logger struct {
-	debugMode bool
 	fileCounter int
 	totalFiles int
 	successCount int
@@ -70,12 +69,11 @@ type Logger struct {
 var globalLogger *Logger
 
 // Init 初始化logger
-func Init(debugMode bool) {
+func Init() {
 	// 初始化颜色支持
 	initColors()
 	
 	globalLogger = &Logger{
-		debugMode: debugMode,
 		fileCounter: 0,
 		totalFiles: 0,
 		successCount: 0,
@@ -86,14 +84,6 @@ func Init(debugMode bool) {
 	
 	// 设置标准log包的输出格式
 	log.SetFlags(0) // 不显示时间戳，我们自己控制格式
-}
-
-// Debug 输出调试信息（仅在调试模式下显示）
-func Debug(format string, args ...interface{}) {
-	if globalLogger != nil && globalLogger.debugMode {
-		msg := fmt.Sprintf(format, args...)
-		fmt.Printf("%s[DEBUG]%s %s\n", ColorGray, ColorReset, msg)
-	}
 }
 
 // Info 输出普通信息
@@ -133,20 +123,26 @@ func ProcessStart(filePath string) int {
 	return globalLogger.fileCounter
 }
 
-// ProcessSuccess 处理成功
-func ProcessSuccess(duration time.Duration) {
-	if globalLogger != nil {
-		globalLogger.successCount++
-	}
-	fmt.Printf(" %s成功%s (耗时: %.2f秒)", ColorGreen, ColorReset, duration.Seconds())
-	
-	// 如果有多个文件，显示进度条；否则直接换行
-	if globalLogger != nil && globalLogger.totalFiles > 1 {
-		fmt.Print("\n")
-		ShowProgress() // 每次文件处理完成都更新进度条
-	} else {
-		fmt.Print("\n")
-	}
+// ProcessSuccess 处理成功，可选传入耗时
+func ProcessSuccess(duration *time.Duration) {
+    if globalLogger != nil {
+        globalLogger.successCount++
+    }
+    
+    // 根据是否传入 duration 显示不同信息
+    if duration != nil {
+        fmt.Printf(" %s成功%s (耗时: %.2f秒)", ColorGreen, ColorReset, duration.Seconds())
+    } else {
+        fmt.Printf(" %s成功%s", ColorGreen, ColorReset)
+    }
+    
+    // 共同的进度显示逻辑
+    if globalLogger != nil && globalLogger.totalFiles > 1 {
+        fmt.Print("\n")
+        ShowProgress()
+    } else {
+        fmt.Print("\n")
+    }
 }
 
 // ProcessError 处理失败
@@ -302,7 +298,7 @@ func ShowFinalSummary() {
 		fmt.Print(progressText)
 		
 		// 等待一小段时间让用户看到100%完成
-		time.Sleep(500 * time.Millisecond)
+		// time.Sleep(500 * time.Millisecond)
 		
 		// 清除进度条
 		ClearProgress()

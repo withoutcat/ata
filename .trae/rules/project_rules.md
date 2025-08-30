@@ -11,7 +11,7 @@
 - 错误处理要完善，提供有意义的错误信息
 
 ## 项目架构原则
-- 命令行工具（cmd/ata）和安装程序（cmd/installer）分离
+- 命令行工具（cmd/ata）和安装程序（cmd/setup）分离
 - 核心功能模块化（internal 包）
 - 公共接口统一（pkg 包）
 - 依赖管理清晰，避免循环依赖
@@ -24,7 +24,7 @@
 
 示例：
 - `feat(converter): 添加批量转换功能`
-- `fix(installer): 修复 Windows 平台安装路径问题`
+- `fix(setup): 修复 Windows 平台安装路径问题`
 - `docs(readme): 更新安装说明`
 - `refactor(build): 优化构建脚本性能`
 

@@ -1,15 +1,37 @@
-# 忽略编译生成的可执行文件
-ata-go/bin/
-ata-go/release/
+# Build artifacts
+ata.exe
+ata-installer-dev.exe
+ata-installer-windows.exe
+ata-installer-linux
+ata-installer-macos
+build/
 
-# 忽略临时文件
-*.tmp
-*.log
+# Go build cache
+*.exe~
+*.dll~
+*.so~
+*.dylib~
 
-# 忽略IDE配置文件
-.vscode/settings.json
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# IDE files
 .idea/
+*.swp
+*.swo
+*~
 
-# 忽略操作系统生成的文件
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db

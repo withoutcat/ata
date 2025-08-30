@@ -1,4 +1,4 @@
-package installer
+package wizard
 
 import (
 	"bufio"
@@ -12,14 +12,19 @@ import (
 
 // ShowInteractiveMenu 显示交互式菜单
 func ShowInteractiveMenu(embeddedExecutable []byte) {
-	showWelcomePage(embeddedExecutable)
+	ShowInteractiveMenuWithVersion(embeddedExecutable, "dev")
+}
+
+// ShowInteractiveMenuWithVersion 显示带版本信息的交互式菜单
+func ShowInteractiveMenuWithVersion(embeddedExecutable []byte, version string) {
+	showWelcomePage(embeddedExecutable, version)
 }
 
 // showWelcomePage 显示欢迎页面
-func showWelcomePage(embeddedExecutable []byte) {
+func showWelcomePage(embeddedExecutable []byte, version string) {
 	clearScreen()
 	fmt.Println("┌─────────────────────────────────────────────────────────────┐")
-	fmt.Println("│                    ATA 安装向导                             │")
+	fmt.Printf("│                 ATA 安装向导 v%-8s                     │\n", version)
 	fmt.Println("├─────────────────────────────────────────────────────────────┤")
 	fmt.Println("│                                                             │")
 	fmt.Println("│  欢迎使用 ATA - AVIF 图像转换工具安装向导                    │")
@@ -51,7 +56,7 @@ func showWelcomePage(embeddedExecutable []byte) {
 
 	switch input {
 	case "1":
-		showLicensePage(embeddedExecutable)
+		showLicensePage(embeddedExecutable, version)
 	case "2":
 		ShowHelp(embeddedExecutable)
 	case "3":
@@ -62,12 +67,12 @@ func showWelcomePage(embeddedExecutable []byte) {
 		fmt.Printf("\n无效选项，请输入 1、2 或 3\n")
 		fmt.Print("按回车键继续...")
 		bufio.NewReader(os.Stdin).ReadString('\n')
-		showWelcomePage(embeddedExecutable)
+		showWelcomePage(embeddedExecutable, version)
 	}
 }
 
 // showLicensePage 显示许可协议页面
-func showLicensePage(embeddedExecutable []byte) {
+func showLicensePage(embeddedExecutable []byte, version string) {
 	clearScreen()
 	fmt.Println("┌─────────────────────────────────────────────────────────────┐")
 	fmt.Println("│                      许可协议                               │")
@@ -104,21 +109,21 @@ func showLicensePage(embeddedExecutable []byte) {
 
 	switch input {
 	case "1":
-		showInstallationPage(embeddedExecutable)
+		showInstallationPage(embeddedExecutable, version)
 	case "2":
-		showWelcomePage(embeddedExecutable)
+		showWelcomePage(embeddedExecutable, version)
 	case "3":
 		showExitPage()
 	default:
 		fmt.Printf("\n无效选项，请输入 1、2 或 3\n")
 		fmt.Print("按回车键继续...")
 		bufio.NewReader(os.Stdin).ReadString('\n')
-		showLicensePage(embeddedExecutable)
+		showLicensePage(embeddedExecutable, version)
 	}
 }
 
 // showInstallationPage 显示安装进度页面
-func showInstallationPage(embeddedExecutable []byte) {
+func showInstallationPage(embeddedExecutable []byte, version string) {
 	clearScreen()
 	fmt.Println("┌─────────────────────────────────────────────────────────────┐")
 	fmt.Println("│                      正在安装                               │")
@@ -140,7 +145,7 @@ func showInstallationPage(embeddedExecutable []byte) {
 	// 执行实际安装
 	err := performInstallation(embeddedExecutable)
 	if err != nil {
-		showErrorPage(err, embeddedExecutable)
+		showErrorPage(err, embeddedExecutable, version)
 	} else {
 		showCompletePage()
 	}
@@ -175,7 +180,7 @@ func showCompletePage() {
 }
 
 // showErrorPage 显示错误页面
-func showErrorPage(err error, embeddedExecutable []byte) {
+func showErrorPage(err error, embeddedExecutable []byte, version string) {
 	clearScreen()
 	fmt.Println("┌─────────────────────────────────────────────────────────────┐")
 	fmt.Println("│                    安装失败                                 │")
@@ -214,16 +219,16 @@ func showErrorPage(err error, embeddedExecutable []byte) {
 
 	switch input {
 	case "1":
-		showInstallationPage(embeddedExecutable)
+		showInstallationPage(embeddedExecutable, version)
 	case "2":
-		showWelcomePage(embeddedExecutable)
+		showWelcomePage(embeddedExecutable, version)
 	case "3":
 		showExitPage()
 	default:
 		fmt.Printf("\n无效选项，请输入 1、2 或 3\n")
 		fmt.Print("按回车键继续...")
 		bufio.NewReader(os.Stdin).ReadString('\n')
-		showErrorPage(err, embeddedExecutable)
+		showErrorPage(err, embeddedExecutable, version)
 	}
 }
 
@@ -577,7 +582,6 @@ func ShowHelp(embeddedExecutable []byte) {
 	fmt.Println("注意: 选项必须在路径参数之前指定")
 	fmt.Println("")
 	fmt.Println("选项:")
-	fmt.Println("  -d        启用调试模式")
 	fmt.Println("  -r        删除原始文件")
 	fmt.Println("  -f        强制覆盖已存在的文件")
 	fmt.Println("  -s        递归处理子目录")
@@ -594,8 +598,8 @@ func ShowHelp(embeddedExecutable []byte) {
 	fmt.Println("  -bg COLOR 设置背景颜色 (默认: white)")
 	fmt.Println("")
 	fmt.Println("示例:")
-	fmt.Println("  ata -s -d ./images       - 递归转换images目录下的所有图像，启用调试模式")
-	fmt.Println("  ata convert -f -d ./photos - 强制转换photos目录下的图像，启用调试模式")
+	fmt.Println("  ata -s ./images       - 递归转换images目录下的所有图像")
+	fmt.Println("  ata convert -f ./photos - 强制转换photos目录下的图像")
 	fmt.Println("  ata ani -fps 24 -crf 20 ./frames output.avif - 从frames目录创建24fps的高质量动画")
 	fmt.Println("  ata ppt -fps 1 ./slides presentation.avif - 从slides目录创建幻灯片动画")
 	fmt.Println("")

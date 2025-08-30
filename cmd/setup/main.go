@@ -2,8 +2,12 @@ package main
 
 import (
 	"embed"
-	"github.com/withoutcat/ata/pkg/installer"
+
+	"github.com/withoutcat/ata/pkg/wizard"
 )
+
+// 版本信息，在构建时通过 -ldflags 注入
+var version = "dev"
 
 //go:embed ata*
 var ataFS embed.FS
@@ -22,5 +26,5 @@ func main() {
 		panic("Failed to read embedded executable: " + err.Error())
 	}
 	
-	installer.ShowInteractiveMenu(ataExecutable)
+	wizard.ShowInteractiveMenuWithVersion(ataExecutable, version)
 }
