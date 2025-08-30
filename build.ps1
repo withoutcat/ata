@@ -1,17 +1,29 @@
 # ATA Unified Build Script
 # Usage:
-#   ./build.ps1          # Development build (default)
-#   ./build.ps1 -dev     # Development build (no version increment)
-#   ./build.ps1 -release # Release build (increment version)
+#   ./build.ps1                    # Development build (default)
+#   ./build.ps1 -dev               # Development build (no version increment)
+#   ./build.ps1 -release           # Release build (auto increment version)
+#   ./build.ps1 -release -version "1.2.3"  # Release build with specified version
 
 param(
     [switch]$dev,
-    [switch]$release
+    [switch]$release,
+    [string]$version
 )
 
 # Validate parameters
 if ($dev -and $release) {
     Write-Host "Error: Cannot specify both -dev and -release" -ForegroundColor Red
+    exit 1
+}
+
+if ($version -and $dev) {
+    Write-Host "Error: Cannot specify version with development build" -ForegroundColor Red
+    exit 1
+}
+
+if ($version -and -not $release) {
+    Write-Host "Error: Version can only be specified with release build (-release)" -ForegroundColor Red
     exit 1
 }
 
@@ -50,20 +62,34 @@ if ($dev) {
         exit 0
     }
     
-    # Increment patch version
-    if ($currentVersion -match '^(\d+)\.(\d+)\.(\d+)$') {
-        $major = [int]$matches[1]
-        $minor = [int]$matches[2]
-        $patch = [int]$matches[3] + 1
-        $buildVersion = "$major.$minor.$patch"
-        
-        # Update version file
-        $buildVersion | Out-File -FilePath $versionFile -Encoding UTF8
-        Write-Host "Version updated: $currentVersion -> $buildVersion" -ForegroundColor Green
+    if ($version) {
+        # Use specified version
+        if ($version -match '^(\d+)\.(\d+)\.(\d+)$') {
+            $buildVersion = $version
+            # Update version file
+            $buildVersion | Out-File -FilePath $versionFile -Encoding UTF8
+            Write-Host "Version set to: $buildVersion" -ForegroundColor Green
+        } else {
+            Write-Host "Invalid version format: $version. Expected format: x.y.z" -ForegroundColor Red
+            Read-Host "Press Enter to exit"
+            exit 1
+        }
     } else {
-        Write-Host "Invalid version format in version.txt: $currentVersion" -ForegroundColor Red
-        Read-Host "Press Enter to exit"
-        exit 1
+        # Increment patch version
+        if ($currentVersion -match '^(\d+)\.(\d+)\.(\d+)$') {
+            $major = [int]$matches[1]
+            $minor = [int]$matches[2]
+            $patch = [int]$matches[3] + 1
+            $buildVersion = "$major.$minor.$patch"
+            
+            # Update version file
+            $buildVersion | Out-File -FilePath $versionFile -Encoding UTF8
+            Write-Host "Version updated: $currentVersion -> $buildVersion" -ForegroundColor Green
+        } else {
+            Write-Host "Invalid version format in version.txt: $currentVersion" -ForegroundColor Red
+            Read-Host "Press Enter to exit"
+            exit 1
+        }
     }
     
     $platforms = @("windows", "linux", "macos")
