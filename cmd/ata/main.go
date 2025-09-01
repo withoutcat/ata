@@ -69,7 +69,7 @@ func handleCommandLine() {
 	aniCmd.IntVar(&width, "width", 0, "输出宽度")
 	aniCmd.IntVar(&height, "height", 0, "输出高度")
 	aniCmd.Float64Var(&scale, "scale", 1.0, "缩放比例")
-	aniCmd.StringVar(&background, "bg", "white", "背景颜色")
+	aniCmd.StringVar(&background, "bg", "0e0e0e", "背景颜色")
 
 	// ppt子命令的选项
 	var pptDeleteOriginal, pptForce bool
